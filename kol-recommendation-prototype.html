@@ -1,0 +1,4692 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GamsGo 推荐清单原型</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --brand: #f24f4f;
+      --brand-dark: #e84444;
+      --blue: #208cf0;
+      --blue-soft: #e9f3ff;
+      --orange: #ff8a00;
+      --green: #20b26b;
+      --red: #e84545;
+      --ink: #142033;
+      --muted: #718096;
+      --line: #e8edf3;
+      --surface: #ffffff;
+      --page: #f6f8fb;
+      --shadow: 0 16px 40px rgba(25, 38, 56, .08);
+      --radius: 8px;
+      --font: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 1180px;
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
+
+    body.user-view-active {
+      background: #fff;
+    }
+
+    html.modal-open,
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    textarea {
+      font-family: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .topbar {
+      height: 90px;
+      background: var(--brand);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      color: #fff;
+      gap: 30px;
+    }
+
+    .logo {
+      flex: 0 0 186px;
+      font-size: 41px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .nav-link {
+      font-size: 20px;
+      font-weight: 700;
+      margin-right: auto;
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .global-search {
+      width: clamp(360px, 42vw, 625px);
+      height: 50px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, .22);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 24px;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .search-mark {
+      width: 18px;
+      height: 18px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .search-mark::after {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 3px;
+      background: #fff;
+      right: -8px;
+      bottom: -4px;
+      transform: rotate(45deg);
+      border-radius: 2px;
+    }
+
+    .pill {
+      min-width: 128px;
+      height: 50px;
+      border: 1px solid rgba(255, 255, 255, .72);
+      border-radius: 25px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .avatar-mini {
+      width: 50px;
+      height: 50px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b3d50, #c17d5c);
+      border: 3px solid rgba(255, 255, 255, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .topbar-entry-link {
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, .7);
+      border-radius: 21px;
+      background: rgba(255, 255, 255, .14);
+      color: #fff;
+      padding: 0 18px;
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .entry-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px;
+      background: #fff;
+    }
+
+    .entry-shell {
+      width: min(820px, 100%);
+      text-align: center;
+    }
+
+    .entry-title {
+      margin: 0 0 10px;
+      font-size: 30px;
+      line-height: 1.25;
+      font-weight: 900;
+      color: #111827;
+    }
+
+    .entry-subtitle {
+      margin: 0 0 48px;
+      color: #6b7280;
+      font-size: 16px;
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .entry-card {
+      min-height: 226px;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #fff;
+      color: #111827;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 32px 24px;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .entry-card:hover {
+      border-color: #f7caca;
+      box-shadow: 0 18px 42px rgba(20, 32, 51, .08);
+      transform: translateY(-2px);
+    }
+
+    .entry-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: #fff0f0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #27272a;
+    }
+
+    .entry-icon svg {
+      width: 30px;
+      height: 30px;
+      stroke-width: 2.4;
+    }
+
+    .entry-card-title {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .entry-card-desc {
+      color: #64748b;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .page {
+      padding: 76px 24px 56px;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 42px;
+      margin: 0 0 62px 4px;
+    }
+
+    .tabs span {
+      font-size: 30px;
+      font-weight: 900;
+      color: #c2ccd8;
+    }
+
+    .tabs .active {
+      color: #162033;
+    }
+
+    .notice {
+      height: 86px;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 40px;
+      font-size: 20px;
+      margin-bottom: 30px;
+    }
+
+    .notice-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 34px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      min-height: 462px;
+      padding: 38px 40px;
+      position: relative;
+    }
+
+    .card.focus {
+      outline: 0;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 28px;
+    }
+
+    .partner-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff8a00 0 34%, #ffca2e 34% 58%, #e74755 58% 100%);
+      transform: rotate(45deg);
+    }
+
+    .tag-muted {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 174px;
+      height: 50px;
+      border-radius: var(--radius);
+      background: #e9eff6;
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 36px;
+    }
+
+    .card-copy {
+      font-size: 18px;
+      line-height: 1.2;
+      margin-bottom: 24px;
+    }
+
+    .link-text {
+      color: var(--blue);
+      font-size: 18px;
+      font-weight: 700;
+      text-decoration: underline;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-width: 156px;
+      height: 46px;
+      padding: 0 24px;
+      border-radius: 24px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(32, 140, 240, .22);
+    }
+
+    .btn.secondary {
+      color: var(--blue);
+      background: #fff;
+      border: 1px solid var(--blue);
+      box-shadow: none;
+    }
+
+    .btn.soft {
+      background: #edf5ff;
+      color: var(--blue);
+      min-width: auto;
+      height: 40px;
+      border-radius: var(--radius);
+      padding: 0 14px;
+      box-shadow: none;
+      white-space: nowrap;
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: .52;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      background: #fff1f1;
+      color: var(--red);
+      border: 1px solid #ffd0d0;
+      box-shadow: none;
+    }
+
+    .btn.gray {
+      background: #eef2f7;
+      color: #4a5568;
+      box-shadow: none;
+    }
+
+    .icon-dot {
+      width: 20px;
+      height: 12px;
+      border-top: 3px solid currentColor;
+      border-bottom: 3px solid currentColor;
+      position: relative;
+      display: inline-block;
+    }
+
+    .icon-dot::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      border-top: 3px solid currentColor;
+      transform: translateY(-50%);
+    }
+
+    .link-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 62px 62px;
+      border: 1px solid #dfe5ec;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .link-panel input {
+      border: 0;
+      padding: 12px 18px;
+      font-size: 17px;
+      outline: 0;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .small-warning {
+      color: var(--orange);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 0;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .affiliate-share {
+      display: grid;
+      gap: 14px;
+    }
+
+    .affiliate-link-copy {
+      min-width: 0;
+    }
+
+    .affiliate-support {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 88px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .qr-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfe;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .qr {
+      width: 70px;
+      height: 70px;
+      border: 4px solid #111;
+      background:
+        linear-gradient(90deg, #111 7px, transparent 7px 13px, #111 13px 20px, transparent 20px 26px, #111 26px 33px, transparent 33px),
+        linear-gradient(#111 7px, transparent 7px 13px, #111 13px 20px, transparent 20px 26px, #111 26px 33px, transparent 33px),
+        #fff;
+      background-size: 33px 33px;
+      margin: 0 auto;
+    }
+
+    .affiliate-divider {
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      bottom: 138px;
+      height: 1px;
+      background: var(--line);
+      margin: 0;
+    }
+
+    .affiliate-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      bottom: 66px;
+    }
+
+    .affiliate-help {
+      display: inline-flex;
+      position: relative;
+    }
+
+    .info-trigger {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #354050;
+      background: #fff;
+      color: #1f2937;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: help;
+    }
+
+    .info-tooltip {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 12px);
+      width: 380px;
+      border-radius: 6px;
+      background: #20242b;
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.5;
+      padding: 14px 16px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+      z-index: 5;
+    }
+
+    .info-tooltip::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      bottom: -8px;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid #20242b;
+    }
+
+    .affiliate-help:hover .info-tooltip,
+    .info-trigger:focus + .info-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .balance {
+      font-size: 42px;
+      font-weight: 900;
+      margin: 42px 0 10px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .config-page {
+      padding: 36px 32px 64px;
+      max-width: 1420px;
+      margin: 0 auto;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .back-btn {
+      color: var(--blue);
+      background: transparent;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 0;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .page-subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      margin-top: 8px;
+    }
+
+    .config-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 20px;
+      font-weight: 900;
+      margin: 0 0 6px;
+    }
+
+    .panel-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .profile-panel {
+      padding: 18px 32px 16px;
+    }
+
+    .profile-panel .panel-head {
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .profile-panel .panel-head > div {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .profile-panel .panel-title {
+      margin: 0;
+    }
+
+    .profile-panel .panel-desc {
+      display: inline-flex;
+      align-items: center;
+      width: auto;
+      margin: 0;
+      padding: 9px 13px;
+      border: 1px solid #ffe1b4;
+      border-radius: 10px;
+      background: #fff8ed;
+      color: #a35f00;
+      font-weight: 800;
+    }
+
+    .profile-panel .panel-desc.is-complete {
+      border-color: #c9f0dd;
+      background: #f3fff8;
+      color: #168452;
+    }
+
+    .profile-showcase {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: 7px;
+      padding: 0;
+    }
+
+    .avatar-large {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      border: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #202b3d, #ff976f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: inherit;
+      font-size: 24px;
+      font-weight: 900;
+      flex: 0 0 auto;
+      cursor: pointer;
+      overflow: hidden;
+      transition: box-shadow .15s ease, transform .15s ease;
+    }
+
+    .avatar-large:hover,
+    .avatar-large:focus-visible {
+      box-shadow: 0 0 0 5px rgba(32, 140, 240, .12);
+      transform: translateY(-1px);
+    }
+
+    .avatar-large.empty {
+      background: #edf1f5;
+      color: #9aa6b4;
+      border: 1px solid #dbe3ed;
+    }
+
+    .avatar-large svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .avatar-large img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-name-row {
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .profile-name {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .profile-name.is-empty {
+      color: #a0aab8;
+    }
+
+    .profile-name-input {
+      width: 100%;
+      min-width: 0;
+      height: 38px;
+      border: 1px solid #dbe3ed;
+      border-radius: var(--radius);
+      padding: 0 12px;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 800;
+      text-align: center;
+      outline: 0;
+      transition: border .15s ease, box-shadow .15s ease;
+    }
+
+    .profile-name-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(32, 140, 240, .12);
+    }
+
+    .profile-name-count {
+      grid-column: 1 / 2;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .profile-name-editor {
+      display: grid;
+      grid-template-columns: minmax(180px, 260px) 74px;
+      gap: 6px 10px;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+    }
+
+    .profile-name-save-btn {
+      min-width: 74px;
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 8px;
+    }
+
+    .profile-edit-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue);
+      background: var(--blue-soft);
+      transition: transform .15s ease, background .15s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      background: #dceeff;
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .edit-tooltip {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%) translateY(4px);
+      white-space: nowrap;
+      border-radius: 6px;
+      background: #20242b;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 9px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+      z-index: 4;
+    }
+
+    .edit-tooltip::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid #20242b;
+    }
+
+    .profile-edit-wrap:hover .edit-tooltip,
+    .icon-btn:focus + .edit-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      color: #2d3748;
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .required {
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .required-star {
+      color: var(--red);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .label-required-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid #dbe3ed;
+      border-radius: var(--radius);
+      padding: 11px 12px;
+      font-size: 15px;
+      outline: 0;
+      transition: border .15s ease, box-shadow .15s ease;
+      background: #fff;
+    }
+
+    .field textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(32, 140, 240, .12);
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 6px;
+    }
+
+    .avatar-crop-body {
+      display: grid;
+      justify-items: center;
+      gap: 22px;
+    }
+
+    .avatar-crop-stage {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: #edf1f5;
+      border: 1px solid #dbe3ed;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 8px rgba(255, 255, 255, .68);
+    }
+
+    .avatar-crop-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .avatar-crop-controls {
+      width: min(100%, 420px);
+      display: grid;
+      gap: 14px;
+    }
+
+    .avatar-crop-control {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      color: #2d3748;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .avatar-crop-control input {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .list-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      border: 1px solid #dbe7f5;
+      border-radius: 10px;
+      background: #f8fbff;
+      min-width: 0;
+    }
+
+    .list-summary-main {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .list-summary-title {
+      color: #536983;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .list-summary-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .list-summary-chip.is-total {
+      border-color: #d6eaff;
+      background: #eef6ff;
+      color: #176fd1;
+    }
+
+    .list-summary-chip.is-active {
+      border-color: #c9f3dc;
+      background: #ecfdf3;
+      color: #078246;
+    }
+
+    .list-summary-chip.is-warning {
+      border-color: #ffe0ad;
+      background: #fff6e8;
+      color: #b65b00;
+    }
+
+    .list-summary-note {
+      color: #7a8ca4;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-row input,
+    .filter-row select {
+      height: 40px;
+      border-radius: var(--radius);
+      border: 1px solid #dbe3ed;
+      padding: 0 12px;
+      min-width: 180px;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .collection-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      background: #fff;
+      min-width: 0;
+    }
+
+    .collection-card > div {
+      min-width: 0;
+    }
+
+    .collection-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      border-radius: 12px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .status.active {
+      color: #128653;
+      background: #e8fff4;
+    }
+
+    .status.paused {
+      color: #7a4e00;
+      background: #fff4de;
+    }
+
+    .collection-risk {
+      margin-top: -4px;
+      margin-bottom: 12px;
+      color: #b04a00;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .link-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #4a5568;
+      font-size: 13px;
+      background: #f7f9fc;
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      max-width: 650px;
+      min-width: 0;
+    }
+
+    .link-line code {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 440px;
+      min-width: 0;
+    }
+
+    .tiny-btn {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .tiny-btn.ghost {
+      color: #4a5568;
+      background: #f1f4f8;
+    }
+
+    .tiny-btn.warn {
+      color: #a35f00;
+      background: #fff5de;
+    }
+
+    .tiny-btn.danger {
+      color: var(--red);
+      background: #fff1f1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 44px 24px;
+      border: 1px dashed #cdd7e3;
+      border-radius: 14px;
+      color: var(--muted);
+      background: #fbfcfe;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 32, 51, .58);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 30px;
+    }
+
+    .modal-stack-backdrop {
+      gap: 0;
+    }
+
+    .modal {
+      width: min(1120px, calc(100vw - 64px));
+      max-height: calc(100vh - 60px);
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-underlay {
+      position: absolute;
+      z-index: 1;
+      opacity: 1;
+      filter: grayscale(.85);
+      pointer-events: none;
+      transform: scale(.985);
+    }
+
+    .modal-underlay::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(226, 232, 240, .72);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .modal-top {
+      position: relative;
+      z-index: 2;
+    }
+
+    .modal.narrow {
+      width: 560px;
+    }
+
+    .modal.medium {
+      width: 780px;
+    }
+
+    .modal-head {
+      min-height: 78px;
+      border-bottom: 1px solid var(--line);
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .close {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #f2f5f9;
+      color: #9aa6b4;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .modal-body {
+      overflow: auto;
+      padding: 24px 30px 30px;
+    }
+
+    .modal-copy-toast {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 4;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+      padding: 16px 28px;
+      border-radius: 8px;
+      background: #fff;
+      color: #263244;
+      box-shadow: 0 10px 34px rgba(20, 32, 51, .16);
+      border: 1px solid #edf1f5;
+      font-size: 18px;
+      font-weight: 800;
+      opacity: 0;
+      transform: translate(-50%, -46%) scale(.98);
+      pointer-events: none;
+      transition: opacity .16s ease, transform .16s ease;
+    }
+
+    .modal-copy-toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-copy-toast .check {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #49c564;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .copy-success-toast {
+      position: fixed;
+      z-index: 180;
+    }
+
+    .create-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .source-tabs {
+      display: inline-flex;
+      background: #eef3f8;
+      border-radius: 24px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .source-tab {
+      height: 38px;
+      min-width: 98px;
+      padding: 0 18px;
+      border-radius: 20px;
+      background: transparent;
+      color: #4a5568;
+      font-weight: 900;
+    }
+
+    .source-tab.active {
+      background: #fff;
+      color: var(--brand);
+      box-shadow: 0 4px 14px rgba(25, 38, 56, .08);
+    }
+
+    .product-search {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .product-category-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: -4px 0 14px;
+    }
+
+    .category-filter-btn {
+      min-width: 0;
+      height: 34px;
+      border: 1px solid #dbe3ed;
+      border-radius: 999px;
+      padding: 0 14px;
+      background: #fff;
+      color: #4a5568;
+      box-shadow: none;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .category-filter-btn.active {
+      border-color: rgba(37, 99, 235, .24);
+      background: #eaf3ff;
+      color: var(--blue);
+    }
+
+    .product-empty {
+      border: 1px dashed #dbe3ed;
+      border-radius: 12px;
+      padding: 28px 16px;
+      color: #718096;
+      background: #fbfcfe;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .product-search input {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      border-radius: var(--radius);
+      border: 1px solid #dbe3ed;
+      padding: 0 14px;
+      outline: 0;
+    }
+
+    .product-list {
+      display: grid;
+      gap: 10px;
+      max-height: 430px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .product-link-list {
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+    }
+
+    .product-link-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .product-link-toolbar .source-tabs {
+      margin-bottom: 0;
+    }
+
+    .specific-link-entry {
+      min-width: 0;
+      height: auto;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+      color: var(--blue);
+      box-shadow: none;
+      font-size: 16px;
+      line-height: 1.4;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .specific-link-entry:hover {
+      background: transparent;
+      box-shadow: none;
+      color: #0c6fcc;
+      transform: none;
+    }
+
+    .title-with-help {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .specific-help {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #354050;
+      background: #fff;
+      color: #354050;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .specific-help::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: 50%;
+      left: calc(100% + 10px);
+      width: 260px;
+      max-width: 70vw;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #1f2937;
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+      text-align: left;
+      white-space: normal;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-4px) translateY(-50%);
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      z-index: 30;
+    }
+
+    .specific-help:hover::after,
+    .specific-help:focus-visible::after {
+      opacity: 1;
+      transform: translateX(0) translateY(-50%);
+    }
+
+    .product {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      background: #fff;
+    }
+
+    .product.link-product {
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+      padding: 16px 0;
+      border-width: 0 0 1px;
+      border-radius: 0;
+    }
+
+    .product.link-product:first-child {
+      padding-top: 0;
+    }
+
+    .product.link-product:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .product.disabled {
+      opacity: .58;
+      background: #f7f8fa;
+    }
+
+    .thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ef5350, #ffb454);
+    }
+
+    .thumb.market {
+      background: linear-gradient(135deg, #ff8a00, #ffbe4d);
+    }
+
+    .product-name {
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .product-name.with-tags {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 2px 0 14px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .collection-product-title {
+      margin: 0 0 7px;
+      font-size: 16px;
+    }
+
+    .product-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .source-tag {
+      display: inline-flex;
+      align-items: center;
+      height: 23px;
+      border-radius: 6px;
+      padding: 0 8px;
+      color: #fff;
+      background: var(--brand);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .source-tag.market {
+      background: var(--orange);
+    }
+
+    .category-tag {
+      display: inline-flex;
+      align-items: center;
+      height: 23px;
+      border-radius: 6px;
+      padding: 0 8px;
+      color: #718096;
+      background: #f0f3f7;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .product-qr {
+      width: 96px;
+      text-align: center;
+    }
+
+    .product-qr-trigger {
+      width: 96px;
+      height: 96px;
+      border: 0;
+      border-radius: 10px;
+      background: #fff;
+      padding: 0;
+      cursor: pointer;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+
+    .product-qr-placeholder {
+      width: 96px;
+      height: 96px;
+      display: block;
+      object-fit: cover;
+      opacity: .82;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .product-qr-trigger:hover .product-qr-placeholder {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+
+    .product-qr.generated {
+      display: grid;
+      place-items: center;
+    }
+
+    .product-generated-qr {
+      width: 96px;
+      height: 96px;
+      image-rendering: pixelated;
+      border: 6px solid #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(25, 38, 56, .08);
+      background: #fff;
+    }
+
+    .product-qr .qr {
+      width: 96px;
+      height: 96px;
+    }
+
+    .product-link-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 76px 76px;
+      align-items: stretch;
+      border: 1px solid #dfe5ec;
+      border-radius: var(--radius);
+      overflow: hidden;
+      max-width: 560px;
+      background: #fff;
+    }
+
+    .product-link-panel input {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      border-right: 1px solid #edf1f5;
+      padding: 0 14px;
+      color: #142033;
+      font-size: 15px;
+      outline: 0;
+    }
+
+    .product-link-panel .btn {
+      height: 48px;
+      min-width: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .product-link-panel .btn + .btn {
+      border-left: 1px solid #edf1f5;
+    }
+
+    .specific-link-input {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 156px;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .specific-link-input input {
+      min-width: 0;
+      height: 46px;
+      border: 1px solid #dbe3ed;
+      border-radius: var(--radius);
+      padding: 0 14px;
+      color: #142033;
+      font-size: 14px;
+      outline: 0;
+    }
+
+    .specific-result {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcfe;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .specific-result.empty,
+    .specific-result.failed {
+      grid-template-columns: 1fr;
+      min-height: 96px;
+      text-align: center;
+      justify-items: center;
+      align-content: center;
+      gap: 6px;
+    }
+
+    .specific-result.failed {
+      border-color: #ffd0d0;
+      background: #fff8f8;
+    }
+
+    .specific-guide-title,
+    .specific-error-title {
+      color: #142033;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .specific-guide-desc,
+    .specific-error-desc {
+      color: #718096;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .specific-error-title {
+      color: var(--red);
+    }
+
+    .specific-result .thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      font-size: 20px;
+    }
+
+    .specific-title-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
+      margin-bottom: 8px;
+    }
+
+    .specific-title-row .product-name {
+      font-size: 17px;
+      line-height: 1.25;
+      margin-bottom: 0;
+    }
+
+    .generated-link-box {
+      border: 1px solid #cce7dc;
+      border-radius: 14px;
+      background: #f4fcf8;
+      padding: 16px;
+    }
+
+    .generated-link-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 156px;
+      gap: 10px;
+    }
+
+    .generated-link-panel input {
+      min-width: 0;
+      height: 46px;
+      border: 1px solid #dbe3ed;
+      border-radius: var(--radius);
+      padding: 0 14px;
+      color: #142033;
+      font-size: 14px;
+      outline: 0;
+      background: #fff;
+    }
+
+    .generated-link-panel input::placeholder,
+    .specific-link-input input::placeholder {
+      color: #9aa6b2;
+    }
+
+    .specific-link-input .btn:disabled,
+    .generated-link-panel .btn:disabled,
+    #confirmSpecificButton:disabled {
+      background: #e9eef5;
+      color: #8fa0b3;
+      border: 1px solid #e2e8f0;
+      opacity: 1;
+      box-shadow: none;
+    }
+
+    .selected-box {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      background: #fbfcfe;
+      position: sticky;
+      top: 0;
+    }
+
+    .recommendation-field {
+      margin-bottom: 16px;
+    }
+
+    .recommendation-field textarea {
+      min-height: 86px;
+      max-height: 150px;
+    }
+
+    .selected-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-weight: 900;
+    }
+
+    .selected-list {
+      display: grid;
+      gap: 8px;
+      max-height: 280px;
+      overflow: auto;
+      margin-bottom: 14px;
+    }
+
+    .selected-item {
+      border: 1px solid #dfe5ec;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .selected-item[draggable="true"] {
+      cursor: grab;
+    }
+
+    .selected-item.dragging {
+      opacity: .54;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(32, 140, 240, .12);
+    }
+
+    .drag-handle {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #8b98a8;
+      background: #f1f4f8;
+    }
+
+    .drag-handle svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .selected-name {
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .move-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .move-actions button {
+      min-width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: #edf2f7;
+      color: #4a5568;
+      font-size: 13px;
+      font-weight: 900;
+      padding: 0 8px;
+    }
+
+    .modal-foot {
+      border-top: 1px solid var(--line);
+      min-height: 72px;
+      padding: 14px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #fbfcfe;
+    }
+
+    .share-layout {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .share-link {
+      display: flex;
+      gap: 10px;
+      margin: 12px 0 16px;
+    }
+
+    .share-link input {
+      flex: 1;
+      border: 1px solid #dbe3ed;
+      border-radius: var(--radius);
+      padding: 11px 12px;
+      font-size: 14px;
+    }
+
+    .reward-share-modal {
+      width: min(680px, calc(100vw - 40px));
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .reward-share-modal .modal-head {
+      min-height: 78px;
+    }
+
+    .reward-share-body {
+      padding: 28px 30px 30px;
+      display: grid;
+      gap: 24px;
+    }
+
+    .reward-share-label {
+      margin-bottom: 14px;
+      color: #1f2937;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .reward-email-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      align-items: center;
+      border: 1px solid #dfe5ec;
+      border-radius: 999px;
+      padding: 5px;
+      background: #fff;
+    }
+
+    .reward-email-row input {
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      padding: 0 18px;
+      color: #141b2d;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .reward-email-row input::placeholder {
+      color: #b8b8b8;
+    }
+
+    .reward-send-btn {
+      height: 44px;
+      border-radius: 999px;
+      background: #fb9999;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .reward-link-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .reward-link-copy {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      align-items: center;
+      border: 1px solid #dfe5ec;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .reward-link-copy input {
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      padding: 0 18px 0 22px;
+      color: #141b2d;
+      font-size: 16px;
+      height: 52px;
+    }
+
+    .reward-copy-btn {
+      height: 44px;
+      margin-right: 4px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #111827;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .reward-socials {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+
+    .reward-social {
+      width: 54px;
+      height: 54px;
+      border: 1px solid #dfe5ec;
+      border-radius: 50%;
+      background: #fff;
+      display: inline-grid;
+      place-items: center;
+      color: #111827;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .reward-social.facebook {
+      color: #1877f2;
+      font-family: Arial, sans-serif;
+    }
+
+    .reward-social.whatsapp {
+      color: #13c55b;
+      font-size: 21px;
+    }
+
+    .canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      background: #fbfcfe;
+    }
+
+    #shareQr {
+      width: 180px;
+      height: 180px;
+      image-rendering: pixelated;
+      border: 8px solid #fff;
+      box-shadow: 0 8px 20px rgba(25, 38, 56, .08);
+    }
+
+    .preview-user-page,
+    .user-page {
+      min-height: 100vh;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .preview-user-page::before,
+    .user-page::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 61vh;
+      min-height: 520px;
+      background:
+        radial-gradient(circle at 72% 14%, rgba(255, 255, 255, .16), transparent 23%),
+        radial-gradient(circle at 32% 8%, rgba(255, 255, 255, .10), transparent 20%),
+        linear-gradient(145deg, #f24f4f 0%, #ef3f43 100%);
+      pointer-events: none;
+    }
+
+    .preview-user-page::after,
+    .user-page::after {
+      content: "";
+      position: absolute;
+      left: -6%;
+      right: -6%;
+      top: 455px;
+      height: 185px;
+      border-radius: 50% 50% 0 0 / 36% 36% 0 0;
+      background: #fff;
+      pointer-events: none;
+    }
+
+    .user-shell {
+      width: calc(100vw - 96px);
+      max-width: 1380px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 34px 0 42px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .user-back-btn {
+      position: fixed;
+      left: 34px;
+      top: 34px;
+      z-index: 4;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, .94);
+      color: var(--brand-dark);
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 12px 26px rgba(143, 22, 22, .14);
+    }
+
+    .user-back-btn span:first-child {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .user-brand-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #fff;
+    }
+
+    .user-brand-logo {
+      color: inherit;
+      text-decoration: none;
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .user-brand-x {
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 800;
+      opacity: .92;
+    }
+
+    .user-brand-kol {
+      font-size: 35px;
+      line-height: 1;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .user-hero {
+      min-height: 184px;
+      padding: 0 0 8px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 54px;
+      color: #fff;
+    }
+
+    .user-hero-copy-group {
+      min-width: 0;
+    }
+
+    .user-hero-copy {
+      margin: 22px 0 0;
+      max-width: 860px;
+      font-size: 42px;
+      line-height: 1.22;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .user-kol {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      min-width: 240px;
+      justify-content: flex-end;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 900;
+      white-space: nowrap;
+      padding-top: 0;
+    }
+
+    .user-avatar {
+      width: 96px;
+      height: 96px;
+      flex: 0 0 96px;
+      border-radius: 50%;
+      border: 6px solid rgba(255, 255, 255, .92);
+      box-shadow: 0 16px 36px rgba(143, 22, 22, .22);
+      object-fit: cover;
+      background: #fff;
+    }
+
+    .user-section {
+      position: relative;
+      z-index: 1;
+      padding-top: 14px;
+    }
+
+    .user-product-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 38px;
+      max-width: 1380px;
+      margin: 0 auto;
+    }
+
+    .user-product-card {
+      min-height: 520px;
+      border-radius: 26px;
+      padding: 26px 26px 30px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-shadow: 0 18px 42px rgba(28, 31, 43, .13);
+    }
+
+    .user-product-image {
+      width: 100%;
+      height: 260px;
+      border-radius: 16px;
+      display: block;
+      object-fit: cover;
+      background: #f5f5f5;
+    }
+
+    .user-product-info {
+      flex: 1;
+      padding: 28px 8px 0;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .user-product-info .product-name {
+      margin: 0 0 24px;
+      color: #171717;
+      font-size: 25px;
+      line-height: 1.22;
+      font-weight: 900;
+    }
+
+    .user-product-price {
+      color: var(--red);
+      font-size: 39px;
+      line-height: 1;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .user-product-price small {
+      margin-left: 6px;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .user-product-action {
+      margin-top: auto;
+      padding-top: 32px;
+    }
+
+    .user-product-action .tiny-btn {
+      width: 100%;
+      height: 64px;
+      border-radius: 32px;
+      background: linear-gradient(180deg, #f35454 0%, #ed393d 100%);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(232, 69, 69, .22);
+      font-size: 20px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .preview-user-page {
+      min-height: 620px;
+      border-radius: 18px;
+    }
+
+    .preview-user-page::before {
+      min-height: 360px;
+      height: 61%;
+    }
+
+    .preview-user-page::after {
+      top: 318px;
+      height: 120px;
+    }
+
+    .preview-user-page .user-shell {
+      width: calc(100% - 48px);
+      max-width: 900px;
+      min-height: 620px;
+      padding: 24px 0 34px;
+    }
+
+    .preview-user-page .user-brand-logo {
+      font-size: 30px;
+    }
+
+    .preview-user-page .user-brand-kol {
+      font-size: 25px;
+    }
+
+    .preview-user-page .user-hero {
+      min-height: 124px;
+      padding: 0 0 10px;
+      align-items: start;
+      gap: 28px;
+    }
+
+    .preview-user-page .user-hero-copy {
+      max-width: 580px;
+      margin-top: 16px;
+      font-size: 28px;
+    }
+
+    .preview-user-page .user-kol {
+      min-width: 150px;
+      gap: 16px;
+      font-size: 24px;
+    }
+
+    .preview-user-page .user-avatar {
+      width: 68px;
+      height: 68px;
+      flex-basis: 68px;
+      border-width: 4px;
+    }
+
+    .preview-user-page .user-section {
+      padding-top: 12px;
+    }
+
+    .preview-user-page .user-product-list {
+      gap: 18px;
+    }
+
+    .preview-user-page .user-product-card {
+      min-height: 300px;
+      border-radius: 18px;
+      padding: 16px 16px 18px;
+    }
+
+    .preview-user-page .user-product-image {
+      height: 142px;
+      border-radius: 12px;
+    }
+
+    .preview-user-page .user-product-info {
+      padding: 16px 4px 0;
+    }
+
+    .preview-user-page .user-product-info .product-name {
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .preview-user-page .user-product-price {
+      font-size: 23px;
+    }
+
+    .preview-user-page .user-product-action {
+      padding-top: 18px;
+    }
+
+    .preview-user-page .user-product-action .tiny-btn {
+      height: 42px;
+      border-radius: 21px;
+      font-size: 14px;
+    }
+
+    .preview-modal {
+      width: min(1120px, calc(100vw - 40px));
+    }
+
+    .preview-modal .modal-body {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%) translateY(20px);
+      min-width: 240px;
+      background: rgba(20, 32, 51, .94);
+      color: #fff;
+      border-radius: 24px;
+      padding: 12px 20px;
+      text-align: center;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 80;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-height: 820px) and (min-width: 901px) {
+      .user-page::before {
+        min-height: 460px;
+      }
+
+      .user-page::after {
+        top: 390px;
+        height: 160px;
+      }
+
+      .user-shell {
+        padding-top: 28px;
+        padding-bottom: 28px;
+      }
+
+      .user-brand-logo {
+        font-size: 38px;
+      }
+
+      .user-brand-kol {
+        font-size: 31px;
+      }
+
+      .user-brand-x {
+        font-size: 23px;
+      }
+
+      .user-hero {
+        min-height: 152px;
+        padding: 0 0 8px;
+        align-items: start;
+      }
+
+      .user-hero-copy {
+        margin-top: 18px;
+        font-size: 34px;
+      }
+
+      .user-kol {
+        min-width: 205px;
+        gap: 18px;
+        font-size: 30px;
+      }
+
+      .user-avatar {
+        width: 78px;
+        height: 78px;
+        flex-basis: 78px;
+        border-width: 5px;
+      }
+
+      .user-section {
+        padding-top: 8px;
+      }
+
+      .user-product-card {
+        min-height: 430px;
+        border-radius: 22px;
+        padding: 20px 20px 22px;
+      }
+
+      .user-product-image {
+        height: 214px;
+        border-radius: 14px;
+      }
+
+      .user-product-info {
+        padding: 20px 6px 0;
+      }
+
+      .user-product-info .product-name {
+        margin-bottom: 16px;
+        font-size: 22px;
+      }
+
+      .user-product-price {
+        font-size: 32px;
+      }
+
+      .user-product-action {
+        padding-top: 18px;
+      }
+
+      .user-product-action .tiny-btn {
+        height: 54px;
+        border-radius: 27px;
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 1500px) and (min-width: 901px) {
+      .user-hero-copy-group {
+        padding-left: 118px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        min-width: 0;
+      }
+
+      .topbar {
+        height: auto;
+        min-height: 82px;
+        flex-wrap: wrap;
+        gap: 18px;
+        padding: 18px;
+      }
+
+      .logo {
+        width: auto;
+        font-size: 32px;
+      }
+
+      .nav-link {
+        margin-right: 0;
+      }
+
+      .global-search {
+        order: 3;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .pill,
+      .avatar-mini {
+        display: none;
+      }
+
+      .topbar-entry-link {
+        margin-left: auto;
+        min-width: auto;
+        padding: 0 14px;
+      }
+
+      .page {
+        padding: 34px 16px;
+      }
+
+      .tabs {
+        margin-bottom: 28px;
+      }
+
+      .card-grid,
+      .entry-grid,
+      .config-layout,
+      .create-grid,
+      .share-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .user-shell {
+        width: min(720px, calc(100vw - 32px));
+        padding: 28px 0 48px;
+      }
+
+      .user-hero {
+        min-height: 230px;
+        padding: 56px 0 34px;
+        grid-template-columns: 1fr;
+        gap: 28px;
+        text-align: left;
+      }
+
+      .user-hero-copy {
+        max-width: none;
+        font-size: 34px;
+      }
+
+      .user-kol {
+        min-width: 0;
+        justify-content: flex-start;
+      }
+
+      .user-product-list {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .entry-page {
+        padding: 40px 16px;
+      }
+
+      .entry-subtitle {
+        margin-bottom: 28px;
+      }
+
+      .affiliate-share {
+        grid-template-columns: 1fr;
+      }
+
+      .affiliate-support {
+        grid-template-columns: 1fr;
+      }
+
+      .qr-card {
+        justify-self: start;
+        width: 88px;
+      }
+
+      .affiliate-divider {
+        position: static;
+        margin: 28px 0;
+      }
+
+      .affiliate-actions {
+        position: static;
+        flex-wrap: wrap;
+      }
+
+      .info-tooltip {
+        left: auto;
+        right: 0;
+        width: min(340px, calc(100vw - 48px));
+      }
+
+      .collection-card {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+        max-width: none;
+      }
+
+      .modal {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+      }
+
+      .modal-backdrop {
+        padding: 12px;
+      }
+
+      .modal-head {
+        padding: 0 18px;
+      }
+
+      .modal-body {
+        padding: 18px;
+      }
+
+      .modal-foot {
+        padding: 12px 18px;
+      }
+
+      .profile-panel {
+        padding: 16px 18px;
+      }
+
+      .profile-name-editor {
+        grid-template-columns: minmax(0, 1fr) 72px;
+        width: min(100%, 360px);
+      }
+
+      .list-summary {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .list-summary-note {
+        white-space: normal;
+      }
+
+      .toolbar,
+      .filter-row {
+        align-items: stretch;
+      }
+
+      .toolbar {
+        flex-direction: column;
+      }
+
+      .toolbar > .btn {
+        width: 100%;
+      }
+
+      .filter-row,
+      .filter-row input,
+      .filter-row select {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .filter-row {
+        flex-direction: column;
+      }
+
+      .actions {
+        justify-content: flex-start;
+        max-width: none;
+      }
+
+      .avatar-crop-stage {
+        width: min(260px, calc(100vw - 96px));
+        height: min(260px, calc(100vw - 96px));
+      }
+
+      .product {
+        grid-template-columns: 52px minmax(0, 1fr) 86px;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .product .btn {
+        min-width: 0;
+        padding: 0 12px;
+      }
+
+      .product-search {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 86px;
+      }
+
+      .product-search .btn {
+        width: 100%;
+        min-width: 0;
+        padding: 0 14px;
+      }
+
+      .selected-item {
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+      }
+
+      .product.link-product {
+        grid-template-columns: 1fr;
+      }
+
+      .product-link-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .product-link-panel input {
+        height: 44px;
+        border-right: 0;
+        border-bottom: 1px solid #edf1f5;
+      }
+
+      .product-link-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .specific-link-entry {
+        align-self: flex-start;
+      }
+
+      .product-category-filter {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+      }
+
+      .category-filter-btn {
+        flex: 0 0 auto;
+      }
+
+      .specific-link-input,
+      .generated-link-panel,
+      .specific-result {
+        grid-template-columns: 1fr;
+      }
+
+      .config-page {
+        padding: 24px 14px 48px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .user-brand-logo {
+        font-size: 34px;
+      }
+
+      .user-brand-x {
+        font-size: 20px;
+      }
+
+      .user-brand-kol {
+        font-size: 23px;
+      }
+
+      .user-hero {
+        min-height: 214px;
+        padding-top: 48px;
+      }
+
+      .user-hero-copy {
+        font-size: 30px;
+      }
+
+      .user-kol {
+        gap: 16px;
+        font-size: 26px;
+      }
+
+      .user-avatar {
+        width: 76px;
+        height: 76px;
+        border-width: 4px;
+      }
+
+      .user-product-card {
+        min-height: 430px;
+        padding: 18px 18px 22px;
+      }
+
+      .user-product-image {
+        height: 218px;
+      }
+
+      .user-product-info .product-name {
+        font-size: 21px;
+      }
+
+      .user-product-price {
+        font-size: 32px;
+      }
+
+      .user-product-action .tiny-btn {
+        height: 54px;
+        border-radius: 27px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="kolTopbar" class="topbar hidden">
+    <div class="logo">GamsGo</div>
+    <div class="nav-link">订阅</div>
+    <div class="global-search">
+      <span class="search-mark"></span>
+      <span>在GamsGo中搜索</span>
+    </div>
+    <div class="pill">简体中文</div>
+    <div class="avatar-mini">K</div>
+    <button class="topbar-entry-link" data-action="back-entry">返回演示入口</button>
+  </header>
+
+  <main id="entryPage" class="entry-page">
+    <section class="entry-shell" aria-labelledby="entryTitle">
+      <h1 id="entryTitle" class="entry-title">KOL 推广原型</h1>
+      <p class="entry-subtitle">原型演示入口 · 请选择入口</p>
+      <div class="entry-grid">
+        <button class="entry-card" data-action="enter-kol">
+          <span class="entry-icon"><i data-lucide="megaphone"></i></span>
+          <span class="entry-card-title">KOL 视角</span>
+          <span class="entry-card-desc">创建商品链接和推荐清单，管理分享内容</span>
+        </button>
+        <button class="entry-card" data-action="enter-user">
+          <span class="entry-icon"><i data-lucide="monitor"></i></span>
+          <span class="entry-card-title">用户视角</span>
+          <span class="entry-card-desc">查看 KOL 分享的清单和商品入口</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <main id="homePage" class="page hidden">
+    <div class="tabs">
+      <span class="active">联盟计划</span>
+      <span>提款记录</span>
+    </div>
+
+    <section class="notice">
+      <span class="notice-dot">!</span>
+      <strong>温馨提示：</strong>
+      <span>在 YouTube 上推广提高视频曝光率时，请勿包含与 YouTube Premium 相关的内容。</span>
+    </section>
+
+    <section class="card-grid">
+      <article class="card">
+        <div class="card-title">
+          <span>GamsGo</span>
+          <span class="partner-mark"></span>
+          <span>联盟计划</span>
+        </div>
+        <div class="tag-muted">官方商城</div>
+        <p class="card-copy">在你的网站、博客或社交媒体平台分享你的专属推荐链接。当粉丝通过你的链接购买 GamsGo 订阅时，首单奖励可获得佣金。</p>
+        <a class="link-text">查看更多</a>
+        <div class="btn-row">
+          <button class="btn"><span class="icon-dot"></span>营销资源</button>
+          <button class="btn secondary">更多信息</button>
+        </div>
+      </article>
+
+      <article class="card focus">
+        <div class="card-title">联盟计划 链接</div>
+        <div class="affiliate-share">
+          <div class="affiliate-link-copy">
+            <div class="link-panel">
+              <input value="https://www.gamsgo.com/partner/7JKYH" readonly>
+              <button class="btn soft" data-action="share-main">分享</button>
+              <button class="btn soft" data-action="copy-main">复制</button>
+            </div>
+          </div>
+          <div class="affiliate-support">
+            <div class="small-warning">
+              <span class="notice-dot">!</span>
+              <span>如果你之前使用过不同的促销链接，请不用担心，原始链接仍然有效。</span>
+            </div>
+            <div class="qr-card">
+              <div class="qr" aria-label="二维码预览"></div>
+            </div>
+          </div>
+        </div>
+        <div class="affiliate-divider"></div>
+        <div class="affiliate-actions">
+          <button class="btn" data-action="open-product">商品链接</button>
+          <button class="btn secondary" data-action="open-config">推荐清单</button>
+          <span class="affiliate-help">
+            <span class="info-trigger" tabindex="0" aria-describedby="affiliateLinkHelp">?</span>
+            <span class="info-tooltip" id="affiliateLinkHelp" role="tooltip">
+              商品链接：获取单个商品的页面链接。<br>
+              推荐清单：把多个商品组合成一个链接，适合一次推广多个商品。
+            </span>
+          </span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-title">账户余额</div>
+        <div class="balance"><small>USD</small> 0.00</div>
+        <p class="card-copy" style="color: var(--muted);">待定佣金 USD 0.00</p>
+        <p class="card-copy">申请转账后，我们将在3个工作日内审核并付款，最终到账时间以银行或支付机构为准。</p>
+        <div class="btn-row" style="margin-top: 78px;">
+          <button class="btn">提取</button>
+          <button class="btn secondary">提款记录</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <main id="configPage" class="config-page hidden">
+    <div class="breadcrumb">
+      <button class="back-btn" data-action="back-home">返回联盟计划</button>
+    </div>
+
+    <div class="config-layout">
+      <section class="panel profile-panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">基础信息</h2>
+          </div>
+        </div>
+
+        <div class="profile-showcase" id="profilePanel">
+          <button type="button" class="avatar-large empty" id="profileAvatar" data-action="choose-profile-avatar" aria-label="上传头像"></button>
+          <input id="profileAvatarInput" type="file" accept="image/*" hidden>
+          <div class="profile-name-row" id="profileNameRow"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">我的推荐清单</h2>
+          </div>
+        </div>
+
+        <div class="list-summary" aria-label="清单概览">
+          <div class="list-summary-main">
+            <span class="list-summary-title">清单概览</span>
+            <span class="list-summary-chip is-total" id="statTotal">共 3 个清单</span>
+            <span class="list-summary-chip is-active" id="statActive">2 个已启用</span>
+            <span class="list-summary-chip is-warning" id="statWarning">1 个含失效商品</span>
+          </div>
+          <span class="list-summary-note" id="summaryRiskNote">含失效商品的清单仍可分享，建议处理后再投放</span>
+        </div>
+
+        <div class="toolbar">
+          <div class="filter-row">
+            <input id="listSearch" placeholder="搜索清单备注名称">
+            <select id="statusFilter">
+              <option value="all">全部状态</option>
+              <option value="active">已启用</option>
+              <option value="paused">已停用</option>
+              <option value="warning">含失效商品</option>
+            </select>
+          </div>
+          <button class="btn" data-action="open-create">新建清单</button>
+        </div>
+
+        <div id="collectionList" class="list"></div>
+      </section>
+    </div>
+  </main>
+
+  <main id="userPage" class="user-page hidden"></main>
+
+  <div id="modalRoot"></div>
+  <div id="copySuccessToast" class="modal-copy-toast copy-success-toast" aria-live="polite">
+    <span class="check">✓</span>
+    <span class="toast-text">联盟链接复制成功</span>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const products = {
+      gamsgo: [
+        { id: "netflix", name: "Netflix", source: "GamsGo", type: "数字订阅", short: "N" },
+        { id: "youtube", name: "YouTube", source: "GamsGo", type: "数字订阅", short: "Y" },
+        { id: "chatgpt", name: "ChatGPT", source: "GamsGo", type: "数字订阅", short: "C" },
+        { id: "canva", name: "Canva", source: "GamsGo", type: "数字订阅", short: "C" }
+      ],
+      market: [
+        { id: "steam", name: "Steam 游戏账号", source: "市场", type: "游戏账号", short: "S" },
+        { id: "xbox", name: "Xbox Game Pass", source: "市场", type: "数字订阅", short: "X" },
+        { id: "gamekey", name: "Game Key", source: "市场", type: "游戏物品", short: "G" },
+        { id: "sold", name: "账号商品样例", source: "市场", type: "游戏账号", status: "已售出", short: "A", disabled: true }
+      ]
+    };
+
+    const defaultRecommendationText = "这些是我本周推荐的订阅与充值商品。";
+
+    const userViewProducts = [
+      { id: "user-youtube", name: "YouTube Premium", price: "$46.99", actionLabel: "查看详情", image: "assets/user-card-youtube.png" },
+      { id: "user-valorant", name: "无畏契约充值", price: "$3.99", priceSuffix: "起", actionLabel: "去选择", image: "assets/user-card-valorant.png" },
+      { id: "user-grok", name: "SuperGrok", price: "$2.49", priceSuffix: "起", actionLabel: "查看可选商品", image: "assets/user-card-supergrok.png" }
+    ];
+
+    const userProductDisplay = {
+      netflix: { price: "$6.99", priceSuffix: "起", actionLabel: "查看详情", image: "assets/user-card-youtube.png" },
+      youtube: { name: "YouTube Premium", price: "$46.99", actionLabel: "查看详情", image: "assets/user-card-youtube.png" },
+      chatgpt: { price: "$9.99", priceSuffix: "起", actionLabel: "查看详情", image: "assets/user-card-supergrok.png" },
+      canva: { price: "$8.99", priceSuffix: "起", actionLabel: "查看详情", image: "assets/user-card-supergrok.png" },
+      steam: { price: "$12.99", priceSuffix: "起", actionLabel: "查看市场商品", image: "assets/user-card-valorant.png" },
+      xbox: { price: "$3.99", priceSuffix: "起", actionLabel: "去选择", image: "assets/user-card-valorant.png" },
+      gamekey: { price: "$5.99", priceSuffix: "起", actionLabel: "查看市场商品", image: "assets/user-card-valorant.png" },
+      sold: { price: "$2.49", priceSuffix: "起", actionLabel: "暂不可用", image: "assets/user-card-valorant.png" }
+    };
+
+    const productLinkCategories = ["全部", "数字订阅", "充值", "游戏账号", "礼品卡", "游戏金币", "游戏物品"];
+
+    let collections = [
+      {
+        id: 101,
+        name: "6月主推清单",
+        createdAt: "2026-06-23",
+        updatedAt: "2026-06-23",
+        status: "active",
+        products: ["netflix", "chatgpt", "steam"],
+        recommendation: defaultRecommendationText,
+        link: "https://www.gamsgo.com/kol/list/kay-june"
+      },
+      {
+        id: 102,
+        name: "市场热门账号推荐",
+        createdAt: "2026-06-20",
+        updatedAt: "2026-06-22",
+        status: "active",
+        products: ["steam", "xbox", "sold"],
+        recommendation: "这些市场账号和订阅商品适合近期集中对比选择。",
+        link: "https://www.gamsgo.com/kol/list/market-hot"
+      },
+      {
+        id: 103,
+        name: "数字订阅推荐",
+        createdAt: "2026-06-12",
+        updatedAt: "2026-06-15",
+        status: "paused",
+        products: ["chatgpt", "canva"],
+        recommendation: "我常用的效率工具清单，适合先从订阅类商品看起。",
+        link: "https://www.gamsgo.com/kol/list/ai-tools"
+      }
+    ];
+
+    let currentSource = "gamsgo";
+    let currentProductLinkSource = "gamsgo";
+    let currentProductLinkCategory = "全部";
+    let currentCollectionCategory = "全部";
+    const generatedProductQrLinks = new Set();
+    let editingId = null;
+    let selectedProductIds = [];
+    let draggedSelectedProductId = null;
+    let collectionReturnDraft = null;
+    let copyToastTimer = null;
+    let specificProductState = null;
+    const profileStorageKey = "gamsgoKolRecommendationProfile";
+
+    function loadSavedProfileData() {
+      try {
+        const saved = window.localStorage?.getItem(profileStorageKey);
+        if (!saved) return { avatar: "", name: "" };
+        const parsed = JSON.parse(saved);
+        return {
+          avatar: typeof parsed.avatar === "string" ? parsed.avatar : "",
+          name: typeof parsed.name === "string" ? parsed.name : ""
+        };
+      } catch (error) {
+        return { avatar: "", name: "" };
+      }
+    }
+
+    function persistProfileData() {
+      try {
+        window.localStorage?.setItem(profileStorageKey, JSON.stringify(profileData));
+      } catch (error) {
+        // The prototype still works without persistence if browser storage is unavailable.
+      }
+    }
+
+    let profileData = loadSavedProfileData();
+    let profileDraft = { ...profileData };
+    let isEditingProfileName = false;
+    let pendingAvatarCropData = "";
+    let avatarCropImage = null;
+    let avatarCropState = { zoom: 1, offsetX: 0, offsetY: 0 };
+
+    const $ = (selector) => document.querySelector(selector);
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function refreshIcons() {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    function allProducts() {
+      return [...products.gamsgo, ...products.market];
+    }
+
+    function productById(id) {
+      return allProducts().find((item) => item.id === id);
+    }
+
+    function setPage(view) {
+      ["entryPage", "homePage", "configPage", "userPage"].forEach((id) => {
+        const page = $(`#${id}`);
+        if (page) page.classList.add("hidden");
+      });
+
+      const topbar = $("#kolTopbar");
+      if (topbar) {
+        topbar.classList.toggle("hidden", !["kol", "config"].includes(view));
+      }
+      document.body.classList.toggle("user-view-active", view === "user");
+
+      const pageMap = {
+        entry: "entryPage",
+        kol: "homePage",
+        config: "configPage",
+        user: "userPage"
+      };
+      const activePage = $(`#${pageMap[view]}`);
+      if (activePage) activePage.classList.remove("hidden");
+    }
+
+    function clearHash() {
+      if (window.location.hash) {
+        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+      }
+    }
+
+    function writeHash(hash) {
+      window.location.hash = hash;
+    }
+
+    function userDisplayFromProduct(product) {
+      const display = userProductDisplay[product.id] || {};
+      return {
+        id: product.id,
+        name: display.name || product.name,
+        price: display.price || "$2.49",
+        priceSuffix: display.priceSuffix || "",
+        actionLabel: display.actionLabel || (product.source === "市场" ? "查看市场商品" : "查看详情"),
+        image: display.image || "assets/user-card-supergrok.png",
+        disabled: product.disabled
+      };
+    }
+
+    function defaultUserCollection() {
+      return collections.find((item) => item.status === "active") || collections[0] || null;
+    }
+
+    function collectionUserProducts(collection) {
+      if (!collection) return userViewProducts;
+      const items = collection.products.map(productById).filter((item) => item && !item.disabled);
+      return items.length ? items.map(userDisplayFromProduct) : userViewProducts;
+    }
+
+    function collectionRecommendationText(collection) {
+      return (collection?.recommendation || "").trim() || defaultRecommendationText;
+    }
+
+    function renderUserProductCards(collection = null) {
+      return collectionUserProducts(collection).map((item) => `
+        <article class="user-product-card ${item.disabled ? "disabled" : ""}">
+          <img class="user-product-image" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+          <div class="user-product-info">
+            <div class="product-name">${escapeHtml(item.name)}</div>
+            <div class="user-product-price">${escapeHtml(item.price)}${item.priceSuffix ? `<small>${escapeHtml(item.priceSuffix)}</small>` : ""}</div>
+          </div>
+          <div class="user-product-action">
+            ${item.disabled
+              ? `<button class="tiny-btn ghost" disabled>暂不可用</button>`
+              : `<button class="tiny-btn" data-action="user-product-view" data-product="${escapeHtml(item.id)}">${escapeHtml(item.actionLabel)}</button>`}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function userProfileDisplayData() {
+      const savedName = profileData.name.trim();
+      const savedAvatar = profileData.avatar.trim();
+      return {
+        name: savedName || "Kay",
+        avatar: savedAvatar || "assets/user-avatar-kay.png"
+      };
+    }
+
+    function renderUserLanding(includeListId = false, collection = null) {
+      const userProfile = userProfileDisplayData();
+      const userName = escapeHtml(userProfile.name);
+      const userAvatar = escapeHtml(userProfile.avatar);
+      const recommendation = escapeHtml(collectionRecommendationText(collection));
+      return `
+        <div class="user-shell">
+          ${includeListId ? `
+            <button class="user-back-btn" data-action="back-entry" aria-label="返回演示入口">
+              <span aria-hidden="true">←</span>
+              <span>返回</span>
+            </button>
+          ` : ""}
+
+          <section class="user-hero">
+            <div class="user-hero-copy-group">
+              <header class="user-brand-header">
+                <div class="user-brand-lockup" aria-label="GamsGo 与 ${userName} 联合推荐">
+                  <a class="user-brand-logo" href="https://www.gamsgo.com/" target="_blank" rel="noopener">GamsGo</a>
+                  <span class="user-brand-x">×</span>
+                  <span class="user-brand-kol">${userName}</span>
+                </div>
+              </header>
+              <p class="user-hero-copy">${recommendation}</p>
+            </div>
+            <div class="user-kol">
+              <img class="user-avatar" src="${userAvatar}" alt="${userName} 头像">
+              <span>${userName}</span>
+            </div>
+          </section>
+
+          <section class="user-section" aria-label="${userName} 的推荐商品">
+            <div${includeListId ? ` id="userProductList"` : ""} class="user-product-list">${includeListId ? "" : renderUserProductCards(collection)}</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderUserPage() {
+      const page = $("#userPage");
+      if (!page) return;
+      const collection = defaultUserCollection();
+      page.innerHTML = renderUserLanding(true, collection);
+      const list = $("#userProductList");
+      if (list) list.innerHTML = renderUserProductCards(collection);
+    }
+
+    function showEntryPage(updateHash = true) {
+      closeModal();
+      setPage("entry");
+      if (updateHash) clearHash();
+      refreshIcons();
+    }
+
+    function showKolHome(updateHash = true) {
+      closeModal();
+      setPage("kol");
+      if (updateHash) writeHash("kol");
+      refreshIcons();
+    }
+
+    function showConfigPage(updateHash = true, hash = "config") {
+      setPage("config");
+      if (updateHash) writeHash(hash);
+      renderCollections();
+      refreshIcons();
+    }
+
+    function showUserPage(updateHash = true) {
+      closeModal();
+      setPage("user");
+      renderUserPage();
+      if (updateHash) writeHash("user");
+      refreshIcons();
+    }
+
+    function showToast(text) {
+      const toast = $("#toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function showCopySuccessToast(text = "联盟链接复制成功") {
+      const toast = $("#copySuccessToast");
+      if (!toast) {
+        showToast(text);
+        return;
+      }
+      const textNode = toast.querySelector(".toast-text");
+      if (textNode) textNode.textContent = text;
+      toast.classList.add("show");
+      window.clearTimeout(copyToastTimer);
+      copyToastTimer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function copyToClipboard(text, onCopied) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(onCopied).catch(() => copyToClipboardFallback(text, onCopied));
+        return;
+      }
+      copyToClipboardFallback(text, onCopied);
+    }
+
+    function copyToClipboardFallback(text, onCopied) {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+      onCopied();
+    }
+
+    function profileNameLength(name) {
+      return name.trim().length;
+    }
+
+    function isProfileNameValid(name) {
+      const length = profileNameLength(name);
+      return length >= 1 && length <= 30;
+    }
+
+    function isProfileComplete() {
+      return profileData.avatar.trim() && isProfileNameValid(profileData.name);
+    }
+
+    function profileNameHasUnsavedChanges() {
+      return profileDraft.name.trim() !== profileData.name.trim();
+    }
+
+    function profileAvatarHtml() {
+      const avatar = profileData.avatar.trim();
+      if (!avatar) return `<i data-lucide="camera" aria-hidden="true"></i>`;
+      if (avatar.startsWith("data:image/")) {
+        return `<img src="${escapeHtml(avatar)}" alt="已上传头像">`;
+      }
+      return escapeHtml(avatar.slice(0, 1).toUpperCase());
+    }
+
+    function profileNameDisplayMarkup() {
+      if (isEditingProfileName) {
+        return `
+          <div class="profile-name-editor">
+            <input id="profileNameInput" class="profile-name-input" value="${escapeHtml(profileDraft.name)}" maxlength="30" placeholder="输入昵称" aria-label="昵称">
+            <button class="btn soft profile-name-save-btn" id="profileNameSaveButton" data-action="save-profile-name" disabled>保存</button>
+            <span class="profile-name-count" id="profileNameCount">${profileNameLength(profileDraft.name)}/30</span>
+          </div>
+        `;
+      }
+
+      const name = profileData.name.trim();
+      return `
+        <div class="profile-name ${name ? "" : "is-empty"}" id="previewName">${escapeHtml(name || "未填写昵称")}</div>
+        <span class="profile-edit-wrap">
+          <button class="icon-btn" data-action="start-profile-name-edit" aria-label="修改昵称" title="修改昵称">
+            <i data-lucide="square-pen"></i>
+          </button>
+          <span class="edit-tooltip">修改昵称</span>
+        </span>
+      `;
+    }
+
+    function updateProfileNameSaveState() {
+      const saveButton = $("#profileNameSaveButton");
+      const count = $("#profileNameCount");
+      const nameLength = profileNameLength(profileDraft.name);
+      const nameValid = isProfileNameValid(profileDraft.name);
+      const hasUnsavedName = profileNameHasUnsavedChanges();
+
+      if (count) count.textContent = `${nameLength}/30`;
+      if (saveButton) {
+        saveButton.disabled = !nameValid || !hasUnsavedName;
+      }
+    }
+
+    function updateProfilePreview() {
+      const avatar = $("#profileAvatar");
+      const nameRow = $("#profileNameRow");
+      if (avatar) {
+        avatar.innerHTML = profileAvatarHtml();
+        avatar.classList.toggle("empty", !profileData.avatar.trim());
+      }
+      if (nameRow) nameRow.innerHTML = profileNameDisplayMarkup();
+      updateProfileNameSaveState();
+      refreshIcons();
+    }
+
+    function startProfileNameEdit() {
+      isEditingProfileName = true;
+      updateProfilePreview();
+      window.setTimeout(() => $("#profileNameInput")?.focus(), 0);
+    }
+
+    function copyText(text) {
+      copyToClipboard(text, () => showCopySuccessToast());
+    }
+
+    function copySpecificLink(text) {
+      copyText(text);
+    }
+
+    function statusLabel(status) {
+      if (status === "active") return "已启用";
+      return "已停用";
+    }
+
+    function invalidProductCount(collection) {
+      return collection.products.map(productById).filter((item) => item && item.disabled).length;
+    }
+
+    function collectionProductSummary(collection) {
+      return `${collection.products.length}个商品`;
+    }
+
+    function renderStats() {
+      const activeCount = collections.filter((item) => item.status === "active").length;
+      const warningCount = collections.filter((item) => invalidProductCount(item) > 0).length;
+
+      $("#statTotal").textContent = `共 ${collections.length} 个清单`;
+      $("#statActive").textContent = `${activeCount} 个已启用`;
+      $("#statWarning").textContent = warningCount ? `${warningCount} 个含失效商品` : "无失效商品";
+      $("#summaryRiskNote").textContent = warningCount
+        ? "含失效商品的清单仍可分享，建议处理后再投放"
+        : "当前清单商品状态正常";
+    }
+
+    function renderCollections() {
+      renderStats();
+      const query = $("#listSearch") ? $("#listSearch").value.trim().toLowerCase() : "";
+      const filter = $("#statusFilter") ? $("#statusFilter").value : "all";
+      const filtered = collections.filter((item) => {
+        const matchQuery = !query || item.name.toLowerCase().includes(query);
+        const matchStatus = filter === "all"
+          || (filter === "warning" ? invalidProductCount(item) > 0 : item.status === filter);
+        return matchQuery && matchStatus;
+      });
+
+      const list = $("#collectionList");
+      if (!filtered.length) {
+        list.innerHTML = `<div class="empty-state">暂无匹配的推荐清单。</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map((item) => {
+        const invalidCount = invalidProductCount(item);
+        return `
+          <article class="collection-card">
+            <div>
+              <div class="collection-title">
+                <span>${item.name}</span>
+                <span class="status ${item.status}">${statusLabel(item.status)}</span>
+              </div>
+              <div class="meta">
+                <span>${collectionProductSummary(item)}</span>
+                <span>创建于 ${item.createdAt}</span>
+                <span>更新于 ${item.updatedAt}</span>
+              </div>
+              ${invalidCount ? `<div class="collection-risk">${invalidCount}个商品已失效，建议处理后再分享</div>` : ""}
+              <div class="link-line">
+                <strong>链接</strong>
+                <code>${item.link}</code>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="tiny-btn" data-action="share" data-id="${item.id}">分享</button>
+              <button class="tiny-btn" data-action="preview" data-id="${item.id}">预览</button>
+              <button class="tiny-btn" data-action="edit" data-id="${item.id}">编辑</button>
+              ${item.status === "paused"
+                ? `<button class="tiny-btn warn" data-action="enable" data-id="${item.id}">启用</button>`
+                : `<button class="tiny-btn warn" data-action="pause" data-id="${item.id}">停用</button>`}
+              <button class="tiny-btn danger" data-action="delete" data-id="${item.id}">删除</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function productLinkUrl(item) {
+      const path = item.source === "市场" ? "market" : "details";
+      return `https://www.gamsgo.com/${path}/${item.id}/partner/7JKYH`;
+    }
+
+    function productQrMarkup(item, link) {
+      if (generatedProductQrLinks.has(link)) {
+        return `
+          <div class="product-qr generated" aria-label="${escapeHtml(item.name)} 已生成二维码">
+            <canvas class="product-generated-qr" width="96" height="96" data-qr-seed="${escapeHtml(link)}"></canvas>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="product-qr" aria-label="${escapeHtml(item.name)} 二维码">
+          <button class="product-qr-trigger" data-action="generate-product-qr" data-link="${escapeHtml(link)}" aria-label="生成 ${escapeHtml(item.name)} 二维码">
+            <img class="product-qr-placeholder" src="output/product-link-qr-placeholder.png" alt="联盟计划二维码">
+          </button>
+        </div>
+      `;
+    }
+
+    function categoryFilterMarkup(activeCategory, actionName) {
+      return productLinkCategories.map((category) => `
+        <button
+          class="category-filter-btn ${activeCategory === category ? "active" : ""}"
+          data-action="${actionName}"
+          data-category="${escapeHtml(category)}"
+          aria-pressed="${activeCategory === category ? "true" : "false"}"
+        >${escapeHtml(category)}</button>
+      `).join("");
+    }
+
+    function productLinkCategoryMarkup() {
+      return categoryFilterMarkup(currentProductLinkCategory, "product-link-category");
+    }
+
+    function collectionCategoryMarkup() {
+      return categoryFilterMarkup(currentCollectionCategory, "collection-category");
+    }
+
+    function renderProductLinkList() {
+      const list = $("#productLinkList");
+      if (!list) return;
+      const query = ($("#productLinkSearch")?.value || "").trim().toLowerCase();
+      const visibleProducts = products[currentProductLinkSource]
+        .filter((item) => !item.disabled)
+        .filter((item) => currentProductLinkCategory === "全部" || item.type === currentProductLinkCategory)
+        .filter((item) => !query || item.name.toLowerCase().includes(query));
+      if (!visibleProducts.length) {
+        list.innerHTML = `<div class="product-empty">未找到搜索结果</div>`;
+        return;
+      }
+      list.innerHTML = visibleProducts.map((item) => {
+          const sourceClass = item.source === "市场" ? "market" : "";
+          const link = productLinkUrl(item);
+          return `
+            <div class="product link-product">
+              ${productQrMarkup(item, link)}
+              <div>
+                <div class="product-name with-tags">
+                  <span>${escapeHtml(item.name)} 链接</span>
+                  <span class="source-tag ${sourceClass}">${escapeHtml(item.source)}</span>
+                  <span class="category-tag">${escapeHtml(item.type)}</span>
+                </div>
+                <div class="product-link-panel">
+                  <input value="${escapeHtml(link)}" readonly>
+                  <button class="btn soft" data-action="share-product-link" data-link="${escapeHtml(link)}">分享</button>
+                  <button class="btn soft" data-action="copy-link" data-link="${escapeHtml(link)}">复制</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      drawProductQrs();
+    }
+
+    function productModalMarkup(dimmed = false) {
+      const tabState = currentProductLinkSource === "market" ? "market" : "gamsgo";
+      const modalClass = dimmed ? "modal medium modal-underlay" : "modal medium";
+      const hiddenAttr = dimmed ? ` aria-hidden="true"` : "";
+      const searchPlaceholder = tabState === "gamsgo" ? "搜索 GamsGo 商品" : "搜索市场商品";
+
+      return `
+          <section class="${modalClass}"${hiddenAttr}>
+            <div class="modal-head">
+              <div class="modal-title">商品链接</div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="product-link-toolbar">
+                <div class="source-tabs">
+                  <button class="source-tab ${tabState === "gamsgo" ? "active" : ""}" data-action="product-link-source" data-source="gamsgo">GamsGo</button>
+                  <button class="source-tab ${tabState === "market" ? "active" : ""}" data-action="product-link-source" data-source="market">市场</button>
+                </div>
+                <button class="specific-link-entry" data-action="open-specific-product">指定商品推广</button>
+              </div>
+              <div class="product-search">
+                <input id="productLinkSearch" placeholder="${searchPlaceholder}">
+                <button class="btn">搜索</button>
+              </div>
+              <div class="product-category-filter" aria-label="商品分类筛选">
+                ${productLinkCategoryMarkup()}
+              </div>
+              <div id="productLinkList" class="product-list product-link-list"></div>
+            </div>
+          </section>
+      `;
+    }
+
+    function openProductModal(resetSource = true) {
+      if (resetSource) {
+        currentProductLinkSource = "gamsgo";
+        currentProductLinkCategory = "全部";
+      }
+      document.documentElement.classList.add("modal-open");
+      document.body.classList.add("modal-open");
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          ${productModalMarkup()}
+        </div>
+      `;
+      renderProductLinkList();
+    }
+
+    function rewardShareModalMarkup(link, closeAction = "close-modal") {
+      return `
+          <section class="modal modal-top reward-share-modal">
+            <div class="modal-head">
+              <div class="modal-title">分享并获得奖励</div>
+              <button class="close" data-action="${closeAction}">×</button>
+            </div>
+            <div class="reward-share-body">
+              <div>
+                <div class="reward-share-label">通过电子邮件邀请朋友</div>
+                <div class="reward-email-row">
+                  <input placeholder="添加电子邮件地址">
+                  <button class="reward-send-btn" data-action="send-product-share-email">发送</button>
+                </div>
+              </div>
+              <div>
+                <div class="reward-share-label">或者分享您的个人推荐链接</div>
+                <div class="reward-link-row">
+                  <div class="reward-link-copy">
+                    <input value="${escapeHtml(link)}" readonly>
+                    <button class="reward-copy-btn" data-action="copy-link" data-link="${escapeHtml(link)}">复制</button>
+                  </div>
+                  <div class="reward-socials" aria-label="社交平台分享">
+                    <button class="reward-social facebook" data-action="product-social-share">f</button>
+                    <button class="reward-social" data-action="product-social-share">X</button>
+                    <button class="reward-social whatsapp" data-action="product-social-share">W</button>
+                    <button class="reward-social" data-action="product-social-share">...</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+      `;
+    }
+
+    function openRewardShareModal(link) {
+      document.documentElement.classList.add("modal-open");
+      document.body.classList.add("modal-open");
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          ${rewardShareModalMarkup(link)}
+        </div>
+      `;
+    }
+
+    function openProductShareModal(link) {
+      document.documentElement.classList.add("modal-open");
+      document.body.classList.add("modal-open");
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          ${productModalMarkup(true)}
+          ${rewardShareModalMarkup(link, "return-product-modal")}
+        </div>
+      `;
+      renderProductLinkList();
+    }
+
+    function createSpecificProductState(returnTo = "") {
+      return {
+        returnTo,
+        linkInput: "",
+        identifyState: "idle",
+        generatedLink: ""
+      };
+    }
+
+    function specificProductDemoItem() {
+      return {
+        ...products.gamsgo[0],
+        name: "Netflix Premium 12 Months"
+      };
+    }
+
+    function specificProductGeneratedLink() {
+      return "https://www.gamsgo.com/partner/product/netflix-premium-12m?kol=7JKYH";
+    }
+
+    function shouldFailSpecificProductIdentify(value) {
+      return /fail|失败|invalid|404/i.test(value);
+    }
+
+    function specificProductResultMarkup() {
+      const state = specificProductState || createSpecificProductState();
+
+      if (state.identifyState === "success") {
+        const item = specificProductDemoItem();
+        const sourceClass = item.source === "市场" ? "market" : "";
+        return `
+          <div class="thumb ${sourceClass}">${escapeHtml(item.short)}</div>
+          <div>
+            <div class="specific-title-row">
+              <span class="product-name">${escapeHtml(item.name)}</span>
+              <span class="source-tag ${sourceClass}">${escapeHtml(item.source)}</span>
+              <span class="category-tag">${escapeHtml(item.type)}</span>
+            </div>
+            <div class="product-meta">商家：${item.source === "GamsGo" ? "GamsGo" : "Market Seller"}</div>
+          </div>
+        `;
+      }
+
+      if (state.identifyState === "failed") {
+        return `
+          <div class="specific-error-title">识别失败</div>
+          <div class="specific-error-desc">未找到搜索结果</div>
+        `;
+      }
+
+      return `
+        <div class="specific-guide-title">输入页面链接后点击识别链接按钮</div>
+        <div class="specific-guide-desc">系统识别成功后点击生成链接按钮制作您的专属链接</div>
+      `;
+    }
+
+    function updateSpecificProductStateView() {
+      if (!specificProductState) return;
+      const hasInput = specificProductState.linkInput.trim().length > 0;
+      const isSuccess = specificProductState.identifyState === "success";
+      const hasGeneratedLink = Boolean(specificProductState.generatedLink);
+      const result = $("#specificProductResult");
+      const identifyButton = $("#identifySpecificButton");
+      const generateButton = $("#generateSpecificButton");
+      const generatedInput = $("#specificGeneratedLinkInput");
+      const confirmButton = $("#confirmSpecificButton");
+
+      if (result) {
+        result.className = `specific-result ${specificProductState.identifyState === "success" ? "success" : specificProductState.identifyState === "failed" ? "failed" : "empty"}`;
+        result.innerHTML = specificProductResultMarkup();
+      }
+      if (identifyButton) identifyButton.disabled = !hasInput;
+      if (generateButton) generateButton.disabled = !isSuccess;
+      if (generatedInput) {
+        generatedInput.value = specificProductState.generatedLink;
+        generatedInput.placeholder = "生成后将在这里显示专属推广链接";
+      }
+      if (confirmButton) {
+        confirmButton.disabled = !hasGeneratedLink;
+        confirmButton.dataset.link = specificProductState.generatedLink;
+      }
+    }
+
+    function identifySpecificProduct() {
+      if (!specificProductState) return;
+      const value = specificProductState.linkInput.trim();
+      if (!value) return;
+      specificProductState.generatedLink = "";
+      specificProductState.identifyState = shouldFailSpecificProductIdentify(value) ? "failed" : "success";
+      updateSpecificProductStateView();
+      showToast(specificProductState.identifyState === "failed" ? "识别失败" : "已识别到商品");
+    }
+
+    function generateSpecificLink() {
+      if (!specificProductState || specificProductState.identifyState !== "success") return;
+      specificProductState.generatedLink = specificProductGeneratedLink();
+      updateSpecificProductStateView();
+      showToast("链接已生成");
+    }
+
+    function specificProductModalMarkup(returnTo = "") {
+      const topClass = returnTo === "product" ? "modal medium modal-top" : "modal medium";
+      const state = specificProductState || createSpecificProductState(returnTo);
+      const hasInput = state.linkInput.trim().length > 0;
+      const isSuccess = state.identifyState === "success";
+      const hasGeneratedLink = Boolean(state.generatedLink);
+      const backAction = returnTo === "collection" ? "return-collection-modal" : returnTo === "product" ? "return-product-modal" : "close-modal";
+      const returnAttr = returnTo ? ` data-return-to="${returnTo}"` : "";
+
+      return `
+          <section class="${topClass}">
+            <div class="modal-head">
+              <div class="modal-title title-with-help">
+                <span>指定商品推广</span>
+                <button class="specific-help" data-action="specific-product-help" data-tooltip="粘贴 GamsGo 或市场页面链接，识别后生成该页面的专属推广链接。" aria-label="指定商品推广说明" title="粘贴 GamsGo 或市场页面链接，识别后生成该页面的专属推广链接。">?</button>
+              </div>
+              <button class="close" data-action="${backAction}"${returnAttr}>×</button>
+            </div>
+            <div class="modal-body">
+              <label class="field-label">页面链接</label>
+              <div class="specific-link-input">
+                <input id="specificProductInput" value="${escapeHtml(state.linkInput)}" placeholder="粘贴页面链接">
+                <button id="identifySpecificButton" class="btn" data-action="identify-specific-product"${hasInput ? "" : " disabled"}>识别链接</button>
+              </div>
+
+              <div id="specificProductResult" class="specific-result ${state.identifyState === "success" ? "success" : state.identifyState === "failed" ? "failed" : "empty"}">
+                ${specificProductResultMarkup()}
+              </div>
+
+              <div class="generated-link-box">
+                <div class="generated-link-panel">
+                  <input id="specificGeneratedLinkInput" value="${escapeHtml(state.generatedLink)}" placeholder="生成后将在这里显示专属推广链接" readonly>
+                  <button id="generateSpecificButton" class="btn" data-action="generate-specific-link"${isSuccess ? "" : " disabled"}>生成链接</button>
+                </div>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn gray" data-action="${backAction}"${returnAttr}>取消</button>
+              <button id="confirmSpecificButton" class="btn" data-action="confirm-specific-link" data-link="${escapeHtml(state.generatedLink)}"${returnAttr}${hasGeneratedLink ? "" : " disabled"}>确定并复制链接</button>
+            </div>
+          </section>
+      `;
+    }
+
+    function openSpecificProductModal(returnTo = "") {
+      specificProductState = createSpecificProductState(returnTo);
+      document.documentElement.classList.add("modal-open");
+      document.body.classList.add("modal-open");
+      if (returnTo === "product") {
+        $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop modal-stack-backdrop">
+          ${productModalMarkup(true)}
+          ${specificProductModalMarkup(returnTo)}
+        </div>
+      `;
+        renderProductLinkList();
+        return;
+      }
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          ${specificProductModalMarkup(returnTo)}
+        </div>
+      `;
+    }
+
+    function openProfileRequiredModal(message = "新建清单前请您填写基础信息。") {
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal narrow">
+            <div class="modal-head">
+              <div class="modal-title">请先完善基础信息</div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <p style="font-size: 16px; line-height: 1.6; margin: 0;">${escapeHtml(message)} 请在基础信息模块上传头像，并点击昵称旁的修改图标填写 1-30 字昵称后保存。</p>
+            </div>
+            <div class="modal-foot">
+              <button class="btn" data-action="focus-profile-panel">去填写</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function focusProfilePanel() {
+      closeModal();
+      startProfileNameEdit();
+      $("#profilePanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function chooseProfileAvatar() {
+      $("#profileAvatarInput")?.click();
+    }
+
+    function updateProfileAvatar(file) {
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        showToast("请选择图片文件");
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        pendingAvatarCropData = String(reader.result || "");
+        openAvatarCropModal(pendingAvatarCropData);
+      });
+      reader.readAsDataURL(file);
+    }
+
+    function avatarCropSourceRect(image = avatarCropImage) {
+      const width = image?.naturalWidth || 0;
+      const height = image?.naturalHeight || 0;
+      const baseSize = Math.min(width, height);
+      const cropSize = baseSize / avatarCropState.zoom;
+      const maxOffsetX = Math.max(0, (width - cropSize) / 2);
+      const maxOffsetY = Math.max(0, (height - cropSize) / 2);
+      const sourceX = clamp((width - cropSize) / 2 + (avatarCropState.offsetX / 100) * maxOffsetX, 0, Math.max(0, width - cropSize));
+      const sourceY = clamp((height - cropSize) / 2 + (avatarCropState.offsetY / 100) * maxOffsetY, 0, Math.max(0, height - cropSize));
+      return { sourceX, sourceY, cropSize };
+    }
+
+    function drawAvatarCropToCanvas(canvas) {
+      if (!canvas || !avatarCropImage?.naturalWidth) return;
+      const context = canvas.getContext("2d");
+      const { sourceX, sourceY, cropSize } = avatarCropSourceRect();
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "#edf1f5";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(avatarCropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
+    }
+
+    function drawAvatarCropPreview() {
+      drawAvatarCropToCanvas($("#avatarCropCanvas"));
+    }
+
+    function openAvatarCropModal(dataUrl) {
+      document.documentElement.classList.add("modal-open");
+      document.body.classList.add("modal-open");
+      avatarCropState = { zoom: 1, offsetX: 0, offsetY: 0 };
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal medium avatar-crop-modal">
+            <div class="modal-head">
+              <div class="modal-title">裁剪头像</div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="avatar-crop-body">
+                <div class="avatar-crop-stage" aria-label="头像裁剪预览">
+                  <canvas id="avatarCropCanvas" class="avatar-crop-canvas" width="260" height="260"></canvas>
+                </div>
+                <div class="avatar-crop-controls">
+                  <label class="avatar-crop-control" for="avatarCropZoom">
+                    <span>缩放</span>
+                    <input id="avatarCropZoom" type="range" min="1" max="3" step="0.05" value="1">
+                  </label>
+                  <label class="avatar-crop-control" for="avatarCropX">
+                    <span>左右</span>
+                    <input id="avatarCropX" type="range" min="-100" max="100" step="1" value="0">
+                  </label>
+                  <label class="avatar-crop-control" for="avatarCropY">
+                    <span>上下</span>
+                    <input id="avatarCropY" type="range" min="-100" max="100" step="1" value="0">
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn gray" data-action="close-modal">取消</button>
+              <button class="btn" data-action="save-avatar-crop">保存头像</button>
+            </div>
+          </section>
+        </div>
+      `;
+      avatarCropImage = new Image();
+      avatarCropImage.onload = drawAvatarCropPreview;
+      avatarCropImage.src = dataUrl;
+    }
+
+    function saveAvatarCrop() {
+      if (!avatarCropImage?.naturalWidth) {
+        showToast("头像图片仍在加载");
+        return;
+      }
+      const output = document.createElement("canvas");
+      output.width = 512;
+      output.height = 512;
+      drawAvatarCropToCanvas(output);
+      profileData.avatar = output.toDataURL("image/png");
+      profileDraft.avatar = profileData.avatar;
+      persistProfileData();
+      closeModal();
+      updateProfilePreview();
+      if (!$("#userPage")?.classList.contains("hidden")) {
+        renderUserPage();
+      }
+      showToast("头像已保存");
+    }
+
+    function saveProfileName() {
+      if (!isProfileNameValid(profileDraft.name)) {
+        updateProfileNameSaveState();
+        showToast("昵称需为 1-30 个字");
+        return;
+      }
+      if (!profileNameHasUnsavedChanges()) {
+        isEditingProfileName = false;
+        updateProfilePreview();
+        return;
+      }
+      profileData.name = profileDraft.name.trim();
+      profileDraft.name = profileData.name;
+      persistProfileData();
+      isEditingProfileName = false;
+      updateProfilePreview();
+      if (!$("#userPage")?.classList.contains("hidden")) {
+        renderUserPage();
+      }
+      showToast("昵称已保存");
+    }
+
+    function openCreateModal(id) {
+      if (!id && !isProfileComplete()) {
+        openProfileRequiredModal();
+        updateProfilePreview();
+        return;
+      }
+
+      editingId = id || null;
+      const editing = editingId ? collections.find((item) => item.id === editingId) : null;
+      selectedProductIds = editing ? [...editing.products] : [];
+      currentSource = "gamsgo";
+      currentCollectionCategory = "全部";
+      const recommendation = editing ? collectionRecommendationText(editing) : defaultRecommendationText;
+
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal">
+            <div class="modal-head">
+              <div>
+                <div class="modal-title">${editing ? "编辑推荐清单" : "新建推荐清单"}</div>
+                <div class="panel-desc">${editing ? "修改备注名称、商品列表和排序，保存后原链接内容会同步更新。" : "创建成功后，系统会生成清单链接和二维码。"}</div>
+              </div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="create-grid">
+                <div>
+                  <div class="field" style="margin-bottom: 16px;">
+                    <label for="collectionName"><span class="label-required-inline">备注名称 <span class="required-star">*</span></span></label>
+                    <div class="required-input-wrap">
+                      <input id="collectionName" value="${editing ? escapeHtml(editing.name) : ""}" placeholder="例如：6月主推清单">
+                    </div>
+                    <div class="helper">备注仅自己可见</div>
+                  </div>
+                  <div class="product-link-toolbar">
+                    <div class="source-tabs">
+                      <button class="source-tab active" data-action="source" data-source="gamsgo">GamsGo</button>
+                      <button class="source-tab" data-action="source" data-source="market">市场</button>
+                    </div>
+                    <button class="specific-link-entry" data-action="open-specific-product-from-collection">指定商品推广</button>
+                  </div>
+                  <div class="product-search">
+                    <input id="productSearch" placeholder="搜索 GamsGo 商品">
+                    <button class="btn">搜索</button>
+                  </div>
+                  <div class="product-category-filter" aria-label="推荐清单商品分类筛选">
+                    ${collectionCategoryMarkup()}
+                  </div>
+                  <div id="productList" class="product-list"></div>
+                </div>
+                <aside class="selected-box">
+                  <div class="field recommendation-field">
+                    <label for="collectionRecommendation">推荐语设置</label>
+                    <textarea id="collectionRecommendation" maxlength="80" placeholder="输入用户打开清单时看到的推荐语">${escapeHtml(recommendation)}</textarea>
+                    <div class="helper">用户打开清单时会看到这句推荐语。</div>
+                  </div>
+                  <div class="selected-head">
+                    <span>已选商品</span>
+                    <span id="selectedCount">0</span>
+                  </div>
+                  <div id="selectedList" class="selected-list"></div>
+                  <div class="helper">首位商品默认作为主推展示。拖拽商品可调整排序。</div>
+                </aside>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn gray" data-action="close-modal">取消</button>
+              <button class="btn" data-action="confirm-collection">${editing ? "保存修改" : "确认创建"}</button>
+            </div>
+          </section>
+        </div>
+      `;
+      renderProductList();
+      renderSelectedList();
+    }
+
+    function captureCollectionDraft() {
+      collectionReturnDraft = {
+        editingId,
+        name: ($("#collectionName")?.value || "").trim(),
+        recommendation: ($("#collectionRecommendation")?.value || "").trim(),
+        source: currentSource,
+        category: currentCollectionCategory,
+        search: ($("#productSearch")?.value || ""),
+        selectedProductIds: [...selectedProductIds]
+      };
+    }
+
+    function returnToCollectionModal() {
+      const draft = collectionReturnDraft;
+      openCreateModal(draft?.editingId || editingId);
+      if (!draft) return;
+      const nameInput = $("#collectionName");
+      const recommendationInput = $("#collectionRecommendation");
+      const searchInput = $("#productSearch");
+      selectedProductIds = [...draft.selectedProductIds];
+      currentSource = draft.source || "gamsgo";
+      currentCollectionCategory = draft.category || "全部";
+      if (nameInput) nameInput.value = draft.name;
+      if (recommendationInput) recommendationInput.value = draft.recommendation || defaultRecommendationText;
+      if (searchInput) {
+        searchInput.value = draft.search;
+        searchInput.placeholder = currentSource === "gamsgo" ? "搜索 GamsGo 商品" : "搜索市场商品";
+      }
+      document.querySelectorAll(".source-tab[data-action='source']").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.source === currentSource);
+      });
+      document.querySelectorAll(".category-filter-btn[data-action='collection-category']").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.category === currentCollectionCategory);
+        tab.setAttribute("aria-pressed", tab.dataset.category === currentCollectionCategory ? "true" : "false");
+      });
+      renderProductList();
+      renderSelectedList();
+      collectionReturnDraft = null;
+    }
+
+    function renderProductList() {
+      const list = $("#productList");
+      if (!list) return;
+      const query = ($("#productSearch")?.value || "").trim().toLowerCase();
+      const visibleProducts = products[currentSource]
+        .filter((item) => currentCollectionCategory === "全部" || item.type === currentCollectionCategory)
+        .filter((item) => !query || item.name.toLowerCase().includes(query));
+      if (!visibleProducts.length) {
+        list.innerHTML = `<div class="product-empty">未找到搜索结果</div>`;
+        return;
+      }
+      list.innerHTML = visibleProducts
+        .map((item) => {
+          const selected = selectedProductIds.includes(item.id);
+          const sourceClass = item.source === "市场" ? "market" : "";
+          return `
+            <div class="product ${item.disabled ? "disabled" : ""}">
+              <div class="thumb ${sourceClass}">${item.short}</div>
+              <div>
+                <div class="product-name with-tags collection-product-title">
+                  <span>${escapeHtml(item.name)}</span>
+                  <span class="source-tag ${sourceClass}">${escapeHtml(item.source)}</span>
+                  <span class="category-tag">${escapeHtml(item.type)}</span>
+                </div>
+              </div>
+              <button class="btn soft" data-action="add-product" data-product="${escapeHtml(item.id)}" ${item.disabled || selected ? "disabled" : ""}>${selected ? "已添加" : item.disabled ? "不可选" : "添加"}</button>
+            </div>
+          `;
+        }).join("");
+    }
+
+    function renderSelectedList() {
+      const box = $("#selectedList");
+      if (!box) return;
+      $("#selectedCount").textContent = selectedProductIds.length;
+      if (!selectedProductIds.length) {
+        box.innerHTML = `<div class="empty-state" style="padding: 24px 12px;">还没有选择商品。</div>`;
+        return;
+      }
+
+      box.innerHTML = selectedProductIds.map((id, index) => {
+        const item = productById(id);
+        if (!item) return "";
+        const sourceClass = item.source === "市场" ? "market" : "";
+        return `
+          <div class="selected-item" draggable="true" data-product="${escapeHtml(item.id)}">
+            <span class="drag-handle" aria-label="拖拽调整排序" title="拖拽调整排序">
+              <i data-lucide="grip-vertical" aria-hidden="true"></i>
+            </span>
+            <div>
+              <div class="selected-name">${index + 1}. ${escapeHtml(item.name)}</div>
+              <div class="product-meta">
+                <span class="source-tag ${sourceClass}">${escapeHtml(item.source)}</span>
+                <span class="category-tag">${escapeHtml(item.type)}</span>
+              </div>
+            </div>
+            <div class="move-actions">
+              <button data-action="remove-product" data-product="${escapeHtml(item.id)}">删</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      refreshIcons();
+    }
+
+    function confirmCollection() {
+      const name = $("#collectionName").value.trim();
+      const recommendation = ($("#collectionRecommendation")?.value || "").trim() || defaultRecommendationText;
+      if (!name) {
+        showToast("请填写备注名称");
+        return;
+      }
+      if (!selectedProductIds.length) {
+        showToast("请至少选择一个商品");
+        return;
+      }
+
+      const today = "2026-06-23";
+      if (editingId) {
+        const item = collections.find((collection) => collection.id === editingId);
+        item.name = name;
+        item.recommendation = recommendation;
+        item.products = [...selectedProductIds];
+        item.updatedAt = today;
+        showToast("清单已更新");
+      } else {
+        const id = Date.now();
+        collections.unshift({
+          id,
+          name,
+          createdAt: today,
+          updatedAt: today,
+          status: "active",
+          products: [...selectedProductIds],
+          recommendation,
+          link: `https://www.gamsgo.com/kol/list/${String(name).replace(/\s+/g, "-").toLowerCase()}`
+        });
+        showToast("清单已创建，链接已生成");
+      }
+      closeModal();
+      renderCollections();
+    }
+
+    function openShareModal(id) {
+      if (!isProfileComplete()) {
+        openProfileRequiredModal("分享清单前请您填写基础信息。");
+        return;
+      }
+      const item = collections.find((collection) => collection.id === id);
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal medium">
+            <div class="modal-head">
+              <div class="modal-title">分享推荐清单</div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="share-layout">
+                <div>
+                  <div class="panel-desc">复制链接或二维码，发到社媒、视频简介、博客和社群。</div>
+                  <div class="share-link">
+                    <input value="${item.link}" readonly>
+                    <button class="btn" data-action="copy-share" data-link="${item.link}">复制链接</button>
+                  </div>
+                  <div class="btn-row">
+                    <button class="btn secondary" data-action="preview" data-id="${item.id}">预览清单</button>
+                    <button class="btn gray" data-action="download-qr">下载二维码</button>
+                  </div>
+                </div>
+                <div class="canvas-wrap">
+                  <canvas id="shareQr" width="180" height="180"></canvas>
+                  <strong>二维码</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+      drawQr(item.link);
+    }
+
+    function drawQrOnCanvas(canvas, seed, size = 180, cells = 18) {
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const unit = size / cells;
+      let hash = 0;
+      for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = "#111";
+
+      function finder(x, y) {
+        ctx.fillRect(x * unit, y * unit, 5 * unit, 5 * unit);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect((x + 1) * unit, (y + 1) * unit, 3 * unit, 3 * unit);
+        ctx.fillStyle = "#111";
+        ctx.fillRect((x + 2) * unit, (y + 2) * unit, unit, unit);
+      }
+
+      finder(1, 1);
+      finder(12, 1);
+      finder(1, 12);
+
+      for (let y = 0; y < cells; y += 1) {
+        for (let x = 0; x < cells; x += 1) {
+          const inFinder = (x >= 1 && x < 6 && y >= 1 && y < 6) || (x >= 12 && x < 17 && y >= 1 && y < 6) || (x >= 1 && x < 6 && y >= 12 && y < 17);
+          if (inFinder) continue;
+          hash = (hash * 1664525 + 1013904223) >>> 0;
+          if (hash % 3 === 0) ctx.fillRect(x * unit, y * unit, unit, unit);
+        }
+      }
+    }
+
+    function drawQr(seed) {
+      drawQrOnCanvas($("#shareQr"), seed);
+    }
+
+    function drawProductQrs() {
+      document.querySelectorAll(".product-generated-qr").forEach((canvas) => {
+        drawQrOnCanvas(canvas, canvas.dataset.qrSeed || "", 96, 18);
+      });
+    }
+
+    function openPreviewModal(id) {
+      const item = collections.find((collection) => collection.id === id);
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal preview-modal">
+            <div class="modal-head">
+              <div class="modal-title">${escapeHtml(item.name)} · 用户打开后的清单预览</div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="preview-user-page">${renderUserLanding(false, item)}</div>
+            </div>
+          </section>
+        </div>
+      `;
+      refreshIcons();
+    }
+
+    function openDeleteModal(id) {
+      const item = collections.find((collection) => collection.id === id);
+      $("#modalRoot").innerHTML = `
+        <div class="modal-backdrop">
+          <section class="modal narrow">
+            <div class="modal-head">
+              <div class="modal-title">删除推荐清单</div>
+              <button class="close" data-action="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <p style="font-size: 16px; line-height: 1.6; margin: 0;">删除后该清单链接将不再展示推荐内容，确认删除吗？</p>
+            </div>
+            <div class="modal-foot">
+              <button class="btn gray" data-action="close-modal">取消</button>
+              <button class="btn danger" data-action="confirm-delete" data-id="${item.id}">确认删除</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function closeModal() {
+      $("#modalRoot").innerHTML = "";
+      document.documentElement.classList.remove("modal-open");
+      document.body.classList.remove("modal-open");
+      pendingAvatarCropData = "";
+      avatarCropImage = null;
+      editingId = null;
+      selectedProductIds = [];
+      draggedSelectedProductId = null;
+      currentCollectionCategory = "全部";
+    }
+
+    document.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+      const action = target.dataset.action;
+      const id = Number(target.dataset.id);
+
+      if (action === "enter-kol") {
+        showKolHome();
+        return;
+      }
+      if (action === "enter-user") {
+        showUserPage();
+        return;
+      }
+      if (action === "back-entry") {
+        showEntryPage();
+        return;
+      }
+      if (action === "open-config") {
+        showConfigPage(true, "config");
+        return;
+      }
+      if (action === "back-home") {
+        showKolHome();
+        return;
+      }
+      if (action === "user-product-view") showToast("原型中模拟进入商品详情页");
+      if (action === "open-product") openProductModal();
+      if (action === "close-modal") closeModal();
+      if (action === "share-main") openRewardShareModal("https://www.gamsgo.com/partner/7JKYH");
+      if (action === "copy-main") copyText("https://www.gamsgo.com/partner/7JKYH");
+      if (action === "copy-link") copyText(target.dataset.link);
+      if (action === "share-product-link") openProductShareModal(target.dataset.link);
+      if (action === "generate-product-qr") {
+        generatedProductQrLinks.add(target.dataset.link);
+        renderProductLinkList();
+      }
+      if (action === "send-product-share-email") showToast("原型中已模拟发送邀请邮件");
+      if (action === "product-social-share") showToast("原型中已模拟打开社交分享");
+      if (action === "open-specific-product") openSpecificProductModal("product");
+      if (action === "open-specific-product-from-collection") {
+        captureCollectionDraft();
+        openSpecificProductModal("collection");
+      }
+      if (action === "return-collection-modal") returnToCollectionModal();
+      if (action === "return-product-modal") openProductModal(false);
+      if (action === "specific-product-help") showToast("粘贴 GamsGo 或市场页面链接，识别后生成该页面的专属推广链接");
+      if (action === "identify-specific-product") identifySpecificProduct();
+      if (action === "generate-specific-link") generateSpecificLink();
+      if (action === "confirm-specific-link") {
+        if (target.dataset.link) copySpecificLink(target.dataset.link);
+      }
+      if (action === "choose-profile-avatar") chooseProfileAvatar();
+      if (action === "start-profile-name-edit") startProfileNameEdit();
+      if (action === "focus-profile-panel") focusProfilePanel();
+      if (action === "open-create") openCreateModal();
+      if (action === "save-profile-name") saveProfileName();
+      if (action === "save-avatar-crop") saveAvatarCrop();
+      if (action === "product-link-source") {
+        currentProductLinkSource = target.dataset.source;
+        currentProductLinkCategory = "全部";
+        document.querySelectorAll(".source-tab[data-action='product-link-source']").forEach((tab) => tab.classList.remove("active"));
+        target.classList.add("active");
+        document.querySelectorAll(".category-filter-btn[data-action='product-link-category']").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.category === currentProductLinkCategory);
+          tab.setAttribute("aria-pressed", tab.dataset.category === currentProductLinkCategory ? "true" : "false");
+        });
+        const search = $("#productLinkSearch");
+        if (search) {
+          search.value = "";
+          search.placeholder = currentProductLinkSource === "gamsgo" ? "搜索 GamsGo 商品" : "搜索市场商品";
+        }
+        renderProductLinkList();
+      }
+      if (action === "product-link-category") {
+        currentProductLinkCategory = target.dataset.category || "全部";
+        document.querySelectorAll(".category-filter-btn[data-action='product-link-category']").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.category === currentProductLinkCategory);
+          tab.setAttribute("aria-pressed", tab.dataset.category === currentProductLinkCategory ? "true" : "false");
+        });
+        renderProductLinkList();
+      }
+      if (action === "source") {
+        currentSource = target.dataset.source;
+        currentCollectionCategory = "全部";
+        document.querySelectorAll(".source-tab[data-action='source']").forEach((tab) => tab.classList.remove("active"));
+        target.classList.add("active");
+        const search = $("#productSearch");
+        if (search) {
+          search.value = "";
+          search.placeholder = currentSource === "gamsgo" ? "搜索 GamsGo 商品" : "搜索市场商品";
+        }
+        document.querySelectorAll(".category-filter-btn[data-action='collection-category']").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.category === currentCollectionCategory);
+          tab.setAttribute("aria-pressed", tab.dataset.category === currentCollectionCategory ? "true" : "false");
+        });
+        renderProductList();
+      }
+      if (action === "collection-category") {
+        currentCollectionCategory = target.dataset.category || "全部";
+        document.querySelectorAll(".category-filter-btn[data-action='collection-category']").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.category === currentCollectionCategory);
+          tab.setAttribute("aria-pressed", tab.dataset.category === currentCollectionCategory ? "true" : "false");
+        });
+        renderProductList();
+      }
+      if (action === "add-product") {
+        selectedProductIds.push(target.dataset.product);
+        renderProductList();
+        renderSelectedList();
+      }
+      if (action === "remove-product") {
+        selectedProductIds = selectedProductIds.filter((productId) => productId !== target.dataset.product);
+        renderProductList();
+        renderSelectedList();
+      }
+      if (action === "confirm-collection") confirmCollection();
+      if (action === "share") openShareModal(id);
+      if (action === "preview") openPreviewModal(id);
+      if (action === "edit") openCreateModal(id);
+      if (action === "pause") {
+        const item = collections.find((collection) => collection.id === id);
+        item.status = "paused";
+        item.updatedAt = "2026-06-23";
+        renderCollections();
+        showToast("清单已停用");
+      }
+      if (action === "enable") {
+        const item = collections.find((collection) => collection.id === id);
+        item.status = "active";
+        item.updatedAt = "2026-06-23";
+        renderCollections();
+        showToast("清单已启用");
+      }
+      if (action === "delete") openDeleteModal(id);
+      if (action === "confirm-delete") {
+        collections = collections.filter((collection) => collection.id !== id);
+        closeModal();
+        renderCollections();
+        showToast("清单已删除");
+      }
+      if (action === "copy-share") copyText(target.dataset.link);
+      if (action === "download-qr") showToast("原型中已模拟下载二维码");
+    });
+
+    document.addEventListener("dragstart", (event) => {
+      const item = event.target.closest(".selected-item[draggable='true']");
+      if (!item) return;
+      draggedSelectedProductId = item.dataset.product;
+      item.classList.add("dragging");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", draggedSelectedProductId);
+      }
+    });
+
+    document.addEventListener("dragover", (event) => {
+      if (!event.target.closest(".selected-item[draggable='true']")) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    });
+
+    document.addEventListener("drop", (event) => {
+      const targetItem = event.target.closest(".selected-item[draggable='true']");
+      if (!targetItem) return;
+      event.preventDefault();
+      const sourceId = draggedSelectedProductId || event.dataTransfer?.getData("text/plain");
+      const targetId = targetItem.dataset.product;
+      if (!sourceId || !targetId || sourceId === targetId) return;
+      const sourceIndex = selectedProductIds.indexOf(sourceId);
+      const targetIndex = selectedProductIds.indexOf(targetId);
+      if (sourceIndex < 0 || targetIndex < 0) return;
+      selectedProductIds.splice(sourceIndex, 1);
+      selectedProductIds.splice(targetIndex, 0, sourceId);
+      renderSelectedList();
+    });
+
+    document.addEventListener("dragend", () => {
+      document.querySelectorAll(".selected-item.dragging").forEach((item) => item.classList.remove("dragging"));
+      draggedSelectedProductId = null;
+    });
+
+    document.addEventListener("input", (event) => {
+      if (event.target.id === "profileNameInput") {
+        profileDraft.name = event.target.value.slice(0, 30);
+        event.target.value = profileDraft.name;
+        updateProfileNameSaveState();
+      }
+      if (event.target.id === "avatarCropZoom") {
+        avatarCropState.zoom = Number(event.target.value) || 1;
+        drawAvatarCropPreview();
+      }
+      if (event.target.id === "avatarCropX") {
+        avatarCropState.offsetX = Number(event.target.value) || 0;
+        drawAvatarCropPreview();
+      }
+      if (event.target.id === "avatarCropY") {
+        avatarCropState.offsetY = Number(event.target.value) || 0;
+        drawAvatarCropPreview();
+      }
+      if (event.target.id === "productSearch") {
+        renderProductList();
+      }
+      if (event.target.id === "productLinkSearch") {
+        renderProductLinkList();
+      }
+      if (event.target.id === "specificProductInput") {
+        specificProductState.linkInput = event.target.value;
+        specificProductState.identifyState = "idle";
+        specificProductState.generatedLink = "";
+        updateSpecificProductStateView();
+      }
+      if (event.target.id === "listSearch") {
+        renderCollections();
+      }
+    });
+
+    document.addEventListener("change", (event) => {
+      if (event.target.id === "profileAvatarInput") {
+        updateProfileAvatar(event.target.files?.[0]);
+        event.target.value = "";
+      }
+      if (event.target.id === "statusFilter") {
+        renderCollections();
+      }
+    });
+
+    function initRoute() {
+      const hash = window.location.hash;
+      if (hash === "#kol") {
+        showKolHome(false);
+        return;
+      }
+      if (hash === "#user") {
+        showUserPage(false);
+        return;
+      }
+      if (hash === "#config" || hash === "#create" || hash === "#share") {
+        showConfigPage(false);
+        if (hash === "#create") {
+          openCreateModal();
+        }
+        if (hash === "#share") {
+          openShareModal(101);
+        }
+        return;
+      }
+      showEntryPage(false);
+    }
+
+    updateProfilePreview();
+    initRoute();
+    refreshIcons();
+  </script>
+</body>
+</html>
